@@ -4,9 +4,21 @@
 VitalService = function(successCB, errorCB) {
 	
 	//the vitalservice is initialized asynchronously
-	this.impl = new VitalServiceWebsocketImpl('vitalservice', successCB, errorCB);
+	this.impl = new VitalServiceWebsocketImpl('vitalservice', null, successCB, errorCB);
 	
 }
+
+VitalService.JS_REGISTER_STREAM_HANDLER = 'js-register-stream-handler';
+
+VitalService.JS_UNREGISTER_STREAM_HANDLER = 'js-unregister-stream-handler';
+
+VitalService.JS_LIST_STREAM_HANDLERS = 'js-list-stream-handlers';
+
+
+VitalService.VERTX_STREAM_SUBSCRIBE = 'vertx-stream-subscribe';
+
+VitalService.VERTX_STREAM_UNSUBSCRIBE = 'vertx-stream-unsubscribe';
+
 
 
 //bulkExport(VitalSegment, OutputStream)
@@ -17,6 +29,43 @@ VitalService = function(successCB, errorCB) {
  * returns ResultList
  */
 VitalService.prototype.callFunction = function(functionName, paramsMap, successCB, errorCB) {
+	
+	
+	if(functionName == VitalService.JS_LIST_STREAM_HANDLERS) {
+		
+		//list handlers
+		this.impl.listStreamHandlers(paramsMap, successCB, errorCB);
+		return;
+		
+	} else if(functionName == VitalService.JS_REGISTER_STREAM_HANDLER) {
+		
+		this.impl.registerStreamHandler(paramsMap, successCB, errorCB);
+		return;
+		
+	} else if(functionName == VitalService.JS_UNREGISTER_STREAM_HANDLER) {
+		
+		this.impl.unregisterStreamHandler(paramsMap, successCB, errorCB);
+		return;
+		
+	} else if(functionName == VitalService.VERTX_STREAM_SUBSCRIBE) {
+		
+		this.impl.streamSubscribe(paramsMap, successCB, errorCB);
+		return;
+		
+	} else if(functionName == VitalService.VERTX_STREAM_UNSUBSCRIBE) {
+		
+		this.impl.streamUnsubscribe(paramsMap, successCB, errorCB);
+		return;
+		
+	}
+	
+//	public final static String VERTX_STREAM_SUBSCRIBE = 'vertx-stream-subscribe'
+//		
+//		public final static String VERTX_STREAM_UNSUBSCRIBE = 'vertx-stream-unsubscribe'
+//		
+//		public final static String VERTX_STREAM_LIST_SUBSCRIPTIONS = 'vertx-stream-list-subscriptions'
+	
+	
 	this.impl.callMethod('callFunction', [functionName, paramsMap], successCB, errorCB);
 }
 
