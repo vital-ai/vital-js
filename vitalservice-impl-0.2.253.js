@@ -69,6 +69,8 @@ VitalServiceWebsocketImpl = function(address, eventBusURL, successCB, errorCB) {
     
 }
 
+VitalServiceWebsocketImpl.DomainsManagerScript = 'commons/scripts/DomainsManagerScript';
+
 VitalServiceWebsocketImpl.prototype.newConn = function() {
     	
 	var _this = this;
@@ -187,6 +189,23 @@ VitalServiceWebsocketImpl.prototype.newConn = function() {
    		
     };
     	
+}
+
+
+VitalServiceWebsocketImpl.prototype.loadDynamicOntologies = function(successCB, errorCB) {
+	
+	var _this = this;
+	
+	this.callMethod('callFunction', ['commons/scripts/DomainsManagerScript', {action: 'listJsonSchemas'}], function(domainsRL){
+		
+		console.log("domainsRL: ", domainsRL);
+		
+		_this.vsJson.reloadOntologies(domainsRL);
+		
+		successCB(domainsRL);
+		
+	}, errorCB);
+	
 }
 	
 	
@@ -529,6 +548,163 @@ VitalServiceWebsocketImpl.prototype.createNewHandler = function() {
 	return wrapperHandler;
 	
 }
+
+
+/*
+ * Returns the result list of all schemas available remotely
+ * @returns array of DomainModel objects
+ */
+VitalServiceWebsocketImpl.prototype.getSchemaList = function(successCB, errorCB) {
+
+	this.callMethod('callFunction', [VitalServiceWebsocketImpl.DomainsManagerScript, {action: 'listJsonSchemas'}], function(domainsRL){
+	
+		console.log("remote domains list", domainsRL);
+		
+		var r = [];
+		
+		for(var i = 0 ; i < domainsRL.results.length; i++) {
+			var g = domainsRL.results[i].graphObject;
+			r.push(g);
+		}
+		
+		successCB(r);
+		
+	}, errorCB);
+	
+}
+
+
+/*
+ * Returns dependencies of a schema, parents or all ancestors based on recursive flag
+ * @returns array of DomainModel objects
+ */
+VitalServiceWebsocketImpl.prototype.getDependenciesOfSchema = function(schemaName, recursive, successCB, errorCB) {
+	
+	this.callMethod('callFunction', [VitalServiceWebsocketImpl.DomainsManagerScript, {action: 'getDependenciesOfSchema', schemaName: schemaName, recursive: recursive}], function(domainsRL){
+		
+		console.log("schema dependencies list", domainsRL);
+		
+		var r = [];
+		
+		for(var i = 0 ; i < domainsRL.results.length; i++) {
+			var g = domainsRL.results[i].graphObject;
+			r.push(g);
+		}
+		
+		successCB(r);
+		
+	}, errorCB);
+}
+
+/*
+ * Returns an array of json schema objects, the original array is wrapped with {name:, URI:, schema: [] }, the order is preserved
+ */
+VitalServiceWebsocketImpl.prototype.getSchemas = function(schemaNamesArray, successCB, errorCB) {
+	
+	this.getNextSchema(schemaNamesArray, 0, [], successCB, errorCB);
+	
+}
+
+VitalServiceWebsocketImpl.prototype.getNextSchema = function(schemaNamesArray, index, output, successCB, errorCB) {
+
+	if(index >= schemaNamesArray.length) {
+		var parsedOutput = [];
+		for(var i = 0; i < output.length; i++) {
+			var c = output[i];
+			var schemaArray = JSON.parse(c);
+			var name = schemaNamesArray[i];
+			var uri = this.vsJson.getSchemaURI(schemaArray);
+			
+			parsedOutput.push({name: name, URI: uri, schema: schemaArray });
+			
+		}
+		successCB(parsedOutput);
+		return
+	}
+	
+	this.getNextSchemaPart(schemaNamesArray, index, output, 1, successCB, errorCB);
+	
+}
+
+
+VitalServiceWebsocketImpl.prototype.getNextSchemaPart = function(schemaNamesArray, index, output, part, successCB, errorCB) {
+
+	var _this = this;
+	
+	this.callMethod('callFunction', [VitalServiceWebsocketImpl.DomainsManagerScript, {action: 'getJsonSchema', schemaName: schemaNamesArray[index], part: part, size: 6000}], function(partRL){
+		
+		var content = partRL.results[0].graphObject.name;
+		
+		if(part == 1) {
+			output.push(content);
+		} else {
+			output[output.length-1] = output[output.length-1] + content;
+		}
+		
+		if(part >= partRL.totalResults) {
+			//no more parts
+			_this.getNextSchema(schemaNamesArray, index + 1, output, successCB, errorCB);
+		} else {
+			_this.getNextSchemaPart(schemaNamesArray, index, output, part + 1, successCB, errorCB);
+		}
+		
+	}, errorCB);
+	
+}
+
+
+/*
+ * Loads given schema objects ( {name:, URI:, schema: [] } in the given order
+ */
+VitalServiceWebsocketImpl.prototype.loadSchemas = function(jsonSchemasArray, successCB, errorCB) {
+	try {
+		this.vsJson.loadSchemas(jsonSchemasArray);
+		successCB();
+	} catch(e) {
+		errorCB(e);
+	}
+}
+
+
+/*
+ * Purges currently loaded schemas
+ */
+VitalServiceWebsocketImpl.prototype.purgeSchemas = function(successCB, errorCB) {
+
+	try {
+		this.vsJson.purgeSchemas();
+		successCB();
+	} catch(e) {
+		errorCB(e);
+	}
+	
+}
+
+/*
+ * Returns locally loaded domains
+ */
+VitalServiceWebsocketImpl.prototype.getLocalSchemaList = function(successCB, errorCB) {
+	try {
+		successCB(this.vsJson.getLocalSchemaList());
+	} catch(e) {
+		errorCB(e);
+	}
+}
+
+
+/*
+ * Unloads schema with given URI, a simple validation is performed to check
+ */
+VitalServiceWebsocketImpl.prototype.unloadSchema = function(schemaURI, successCB, errorCB) {
+	try {
+		this.vsJson.unloadSchema(schemaURI);
+		successCB();
+	} catch(e) {
+		console.error(e);
+		errorCB(e);
+	}
+}
+
 
 UUIDGenerator = {};
 

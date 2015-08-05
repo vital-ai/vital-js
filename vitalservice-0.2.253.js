@@ -71,7 +71,6 @@ VitalService.prototype.callFunction = function(functionName, paramsMap, successC
 
 //close()
 
-
 VitalService.prototype.commitTransaction = function(transaction, successCB, errorCB) {
 	this.impl.callMethod('commitTransaction', [transaction], successCB, errorCB);
 }
@@ -284,3 +283,56 @@ VitalService.prototype.setTransaction = function(transaction, successCB, errorCB
 VitalService.prototype.validate = function(successCB, errorCB) {
 	this.impl.callMethod('validate', [], successCB, errorCB);
 }
+
+
+/**
+ * Returns the result list of all schemas available remotely
+ * @returns array of DomainModel objects
+ */
+VitalService.prototype.getSchemaList = function(successCB, errorCB) {
+	this.impl.getSchemaList(successCB, errorCB);
+}
+
+/**
+ * Returns dependencies of a schema, parents or all ancestors based on recursive flag
+ * @returns array of DomainModel objects
+ */
+VitalService.prototype.getDependenciesOfSchema = function(schemaName, recursive, successCB, errorCB) {
+	this.impl.getDependenciesOfSchema(schemaName, recursive, successCB, errorCB);
+}
+
+/**
+ * Returns an array of json schema objects, the original array is wrapped with {name:, URI:, schema: [] }, the order is preserved
+ */
+VitalService.prototype.getSchemas = function(schemaNamesArray, successCB, errorCB) {
+	this.impl.getSchemas(schemaNamesArray, successCB, errorCB);
+}
+
+/**
+ * Loads given schema objects ( {name:, URI:, schema: [] } in the given order
+ */
+VitalService.prototype.loadSchemas = function(jsonSchemasArray, successCB, errorCB) {
+	this.impl.loadSchemas(jsonSchemasArray, successCB, errorCB);
+}
+
+/**
+ * Purges currently loaded domain schemas
+ */
+VitalService.prototype.purgeSchemas = function(successCB, errorCB) {
+	this.impl.purgeSchemas(successCB, errorCB);
+}
+
+/**
+ * Returns locally loaded domains
+ */
+VitalService.prototype.getLocalSchemaList = function(successCB, errorCB) {
+	this.impl.getLocalSchemaList(successCB, errorCB);
+}
+
+/**
+ * Unloads schema
+ */
+VitalService.prototype.unloadSchema = function(schemaURI, successCB, errorCB) {
+	this.impl.unloadSchema(schemaURI, successCB, errorCB);
+}
+
