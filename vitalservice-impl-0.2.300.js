@@ -235,7 +235,13 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 	
 	this.eb.send(this.address, data, function(result) {
 		
+		
+		if(result == null) {
+      result = { status: 'error', message: 'request timed out' };
+		}
+		
 		console.log(method + ' result: ', result);
+		
 		
 		//check the status, then object
 		
