@@ -1,13 +1,23 @@
 /**
  * VitalService javascript interface
  */
-VitalServiceAdmin = function(successCB, errorCB) {
+VitalServiceAdmin = function(address, successCB, errorCB) {
 	
 	//the vitalservice is initialized asynchronously
-	this.impl = new VitalServiceWebsocketImpl('vitalserviceadmin', successCB, errorCB);
+	this.impl = new VitalServiceWebsocketImpl(address, 'admin', null, successCB, errorCB);
 	
 	this.NO_TRANSACTION = null;
 	
+}
+
+
+//non - api
+
+/**
+ * returns currently logged in user or null
+ */
+VitalServiceAdmin.prototype.getCurrentLogin = function() {
+	return this.impl.login;
 }
 
 
