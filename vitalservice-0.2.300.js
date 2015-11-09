@@ -1,10 +1,10 @@
 /**
  * VitalService javascript interface
  */
-VitalService = function(successCB, errorCB) {
+VitalService = function(address, successCB, errorCB) {
 	
 	//the vitalservice is initialized asynchronously
-	this.impl = new VitalServiceWebsocketImpl('vitalservice', null, successCB, errorCB);
+	this.impl = new VitalServiceWebsocketImpl(address, 'service', null, successCB, errorCB);
 	
 	this.NO_TRANSACTION = null;
 	
@@ -20,6 +20,17 @@ VitalService.JS_LIST_STREAM_HANDLERS = 'js-list-stream-handlers';
 VitalService.VERTX_STREAM_SUBSCRIBE = 'vertx-stream-subscribe';
 
 VitalService.VERTX_STREAM_UNSUBSCRIBE = 'vertx-stream-unsubscribe';
+
+
+
+//non - api
+
+/**
+ * returns currently logged in user or null
+ */
+VitalService.prototype.getCurrentLogin = function() {
+	return this.impl.login;
+}
 
 
 //bulkExport(VitalSegment, OutputStream)
