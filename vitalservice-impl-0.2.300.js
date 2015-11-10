@@ -280,10 +280,16 @@ VitalServiceWebsocketImpl.prototype.initialSessionCheck = function() {
 		_this.sH = null;		
 		
 	}, function(errorMsg){
-		_this.eH(errorMsg);
+		
+		console.warn(errorMsg);
+		
+		$.removeCookie(_this.COOKIE_SESSION_ID);
+		
+		_this.sH();
 		_this.eH = null;
 		_this.sH = null;
-		$.removeCookie(_this.COOKIE_SESSION_ID);
+		
+		
 	});
 	
 }
