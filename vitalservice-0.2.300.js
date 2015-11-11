@@ -1,10 +1,15 @@
 /**
  * VitalService javascript interface
+ * @param address - vitalservice eventbus address, 'vitalservice' in most cases
+ * @param eventBusURL - if null then current window url protocol://host:port/eventbus will be used 
+ * @param successCB
+ * @param errorCB
+ * @returns
  */
-VitalService = function(address, successCB, errorCB) {
+VitalService = function(address, eventbusURL, successCB, errorCB) {
 	
 	//the vitalservice is initialized asynchronously
-	this.impl = new VitalServiceWebsocketImpl(address, 'service', null, successCB, errorCB);
+	this.impl = new VitalServiceWebsocketImpl(address, 'service', eventbusURL, successCB, errorCB);
 	
 	this.NO_TRANSACTION = null;
 	

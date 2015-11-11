@@ -284,6 +284,7 @@ VitalServiceWebsocketImpl.prototype.initialSessionCheck = function() {
 		console.warn(errorMsg);
 		
 		$.removeCookie(_this.COOKIE_SESSION_ID);
+		_this.appSessionID = null;
 		
 		_this.sH();
 		_this.eH = null;
@@ -433,6 +434,7 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 			if(functionName == VitalServiceWebsocketImpl.vitalauth_logout && _this.COOKIE_SESSION_ID != null) {
 				//no matter what, always remove the cookie and notify callback
 				$.removeCookie(_this.COOKIE_SESSION_ID);
+				_this.appSessionID = null;
 			}
 			
 			errorCB(result.message)
