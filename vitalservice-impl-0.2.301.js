@@ -82,9 +82,28 @@ VitalServiceWebsocketImpl = function(address, type, eventBusURL, successCB, erro
 	this.eb = null;
 	
 	if(typeof( VitalServiceJson ) != 'undefined') {
-		console.log("loading optional json validation module...");
 		
-		this.vsJson = new VitalServiceJson();
+		console.log("loading json validation module...");
+		
+		if(VitalServiceJson.SINGLETON != null) {
+			
+			console.log("json singleton already set - reusing");
+			
+		} else {
+		
+			console.log("Initializing new json singleton");
+			
+			VitalServiceJson.SINGLETON = new VitalServiceJson();
+			
+		}
+		
+		this.vsJson = VitalServiceJson.SINGLETON;
+		
+		if(type == 'service') {
+			
+			vitaljs.vitalservice = this;
+			
+		}
 		
 	} else {
 		
@@ -883,3 +902,5 @@ UUIDGenerator.generate = function() {
 	});
 	
 }
+
+
