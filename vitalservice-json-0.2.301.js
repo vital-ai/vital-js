@@ -588,10 +588,14 @@ VitalServiceJson.prototype.unloadSchema = function(schemaURI) {
 	
 	tv4.dropSchemas();
 	
+	delete this.domainsMap[schemaURI];
+	for( var i = 0 ; i < d.properties.length; i++) {
+		var pURI = d.properties[i].URI;
+		delete this.propertiesMap[pURI];
+	}
+	
 	this.loaded = {};
-	
 	this.dynamicPropertiesClasses = [];
-	
 	
 	this._load(newList);
 	
