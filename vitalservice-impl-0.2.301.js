@@ -423,10 +423,10 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 					for(var i = 0 ; i < response.results.length; i++) {
 						var g = response.results[i].graphObject;
 						if(g.type == 'http://vital.ai/ontology/vital#UserSession') {
-							_this.appSessionID = g.session
-							console.log('new auth session: ', g.sessionID);
+							_this.appSessionID = g.get('sessionID');
+							console.log('new auth session: ', g.get('sessionID'));
 							//store it in cookie
-							$.cookie(_this.COOKIE_SESSION_ID, g.sessionID, { expires: 7 });
+							$.cookie(_this.COOKIE_SESSION_ID, g.get('sessionID'), { expires: 7 });
 						} else if(_this.loginTypes.indexOf(g.type) >= 0) {
 							_this.login = g;
 						}
