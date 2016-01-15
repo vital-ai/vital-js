@@ -1,0 +1,44 @@
+<project name="vital-js" default="dist">
+	
+	<fail unless="dist.version" message="dist.version property not set!" />
+	
+	<property name="dist.zip" value="vital-js-${dist.version}.zip" />
+	
+	<property name="dist.tar.gz" value="vital-js-${dist.version}.tar.gz" />
+	
+	<property name="dist.javadoc.file" value="${basedir}/vital-js-${dist.version}-javadocs.zip" />
+	
+	<!-- generate distribution -->
+	<target name="dist">
+		
+		<delete file="${dist.zip}" />
+		<delete file="${dist.tar.gz}" />
+		
+		<delete file="${dist.javadoc.file}" />
+		
+		<zip destfile="${dist.javadoc.file}" whenempty="create" basedir="${basedir}" defaultexcludes="true">
+			<include name="xxx-*" />
+		</zip>
+		
+	
+		<copy file="${basedir}/README.md" tofile="vital-js-${dist.version}-readme.txt" />
+		
+			
+		<fileset id="dist-files" dir="${basedir}" defaultexcludes="true">
+			<include name="test/**"/>
+			<include name="*.js"/> 
+			<include name="README.md"/>
+		</fileset>
+		
+		
+		<zip destfile="${dist.zip}" compress="yes">
+			<zipfileset refid="dist-files"  prefix="vital-js" />
+		</zip>
+		
+		<tar destfile="${dist.tar.gz}" compression="gzip">
+			<tarfileset refid="dist-files" prefix="vital-js" />
+		</tar>
+		
+	</target>
+	
+</project>
