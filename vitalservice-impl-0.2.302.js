@@ -1,4 +1,9 @@
 /**
+ * Set this property to redirect pages to maintenance page if vitalservice is unavailable
+ */
+var VITAL_SERVICE_UNAVAILABLE_URL = null;
+
+/**
  * Websocket based implementation
  * @param address - vitalservice eventbus address, 'vitalservice' in most cases
  * @param eventBusURL - if null then current window url protocol://host:port/eventbus will be used 
@@ -454,6 +459,17 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 				//no matter what, always remove the cookie and notify callback
 				$.removeCookie(_this.COOKIE_SESSION_ID);
 				_this.appSessionID = null;
+			}
+			
+			if(result.message != null) {
+				
+				if( result.message.indexOf('java.net.ConnectException') >= 0 && VITAL_SERVICE_UNAVAILABLE_URL != null ) {
+					
+					window.location.href = VITAL_SERVICE_UNAVAILABLE_URL;
+					return;
+					
+				}
+				
 			}
 			
 			errorCB(result.message)
