@@ -24,6 +24,13 @@ VitalServiceAdmin.prototype.getCurrentLogin = function() {
 	return this.impl.login;
 }
 
+/**
+ * returns current session ID or null if not authenticated 
+ */
+VitalServiceAdmin.prototype.getSessionID = function() {
+	return this.impl.appSessionID;
+}
+
 
 /**
  * Adds app
