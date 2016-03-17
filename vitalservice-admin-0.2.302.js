@@ -15,6 +15,18 @@ VitalServiceAdmin = function(address, eventbusURL, successCB, errorCB) {
 }
 
 
+VitalServiceAdmin.JS_REGISTER_STREAM_HANDLER = 'js-register-stream-handler';
+
+VitalServiceAdmin.JS_UNREGISTER_STREAM_HANDLER = 'js-unregister-stream-handler';
+
+VitalServiceAdmin.JS_LIST_STREAM_HANDLERS = 'js-list-stream-handlers';
+
+
+VitalServiceAdmin.VERTX_STREAM_SUBSCRIBE = 'vertx-stream-subscribe';
+
+VitalServiceAdmin.VERTX_STREAM_UNSUBSCRIBE = 'vertx-stream-unsubscribe';
+
+
 //non - api
 
 /**
@@ -74,6 +86,35 @@ VitalServiceAdmin.prototype.addVitalServiceKey = function(app, vitalServiceKey, 
 * returns ResultList
 */
 VitalServiceAdmin.prototype.callFunction = function(app,functionName, paramsMap, successCB, errorCB) {
+	
+	if(functionName == VitalServiceAdmin.JS_LIST_STREAM_HANDLERS) {
+		
+		//list handlers
+		this.impl.listStreamHandlers(paramsMap, successCB, errorCB);
+		return;
+		
+	} else if(functionName == VitalServiceAdmin.JS_REGISTER_STREAM_HANDLER) {
+		
+		this.impl.registerStreamHandler(paramsMap, successCB, errorCB);
+		return;
+		
+	} else if(functionName == VitalServiceAdmin.JS_UNREGISTER_STREAM_HANDLER) {
+		
+		this.impl.unregisterStreamHandler(paramsMap, successCB, errorCB);
+		return;
+		
+	} else if(functionName == VitalServiceAdmin.VERTX_STREAM_SUBSCRIBE) {
+		
+		this.impl.streamSubscribe(paramsMap, successCB, errorCB);
+		return;
+		
+	} else if(functionName == VitalServiceAdmin.VERTX_STREAM_UNSUBSCRIBE) {
+		
+		this.impl.streamUnsubscribe(paramsMap, successCB, errorCB);
+		return;
+		
+	}
+	
 	this.impl.callMethod('callFunction', [app, functionName, paramsMap], successCB, errorCB);
 }
 

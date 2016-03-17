@@ -137,6 +137,17 @@ VitalServiceWebsocketImpl = function(address, type, eventBusURL, successCB, erro
     
 }
 
+VitalServiceWebsocketImpl.JS_REGISTER_STREAM_HANDLER = 'js-register-stream-handler';
+
+VitalServiceWebsocketImpl.JS_UNREGISTER_STREAM_HANDLER = 'js-unregister-stream-handler';
+
+VitalServiceWebsocketImpl.JS_LIST_STREAM_HANDLERS = 'js-list-stream-handlers';
+
+
+VitalServiceWebsocketImpl.VERTX_STREAM_SUBSCRIBE = 'vertx-stream-subscribe';
+
+VitalServiceWebsocketImpl.VERTX_STREAM_UNSUBSCRIBE = 'vertx-stream-unsubscribe';
+
 VitalServiceWebsocketImpl.DomainsManagerScript = 'commons/scripts/DomainsManagerScript';
 
 VitalServiceWebsocketImpl.vitalauth_login = 'vitalauth.login';
@@ -200,8 +211,13 @@ VitalServiceWebsocketImpl.prototype.newConn = function() {
     		
     		console.log('refreshing session handlers: ', currentKeys);
     		
+    		var args = [VitalServiceWebsocketImpl.VERTX_STREAM_SUBSCRIBE, {streamNames: currentKeys, sessionID: _this.sessionID}];
+    		if(_this.admin) {
+    			//insert null app
+    			args.splice(0, 0, null);
+    		}
     		//re-register it ?
-    		_this.callMethod('callFunction', [VitalService.VERTX_STREAM_SUBSCRIBE, {streamNames: currentKeys, sessionID: _this.sessionID}], function(successRL){
+    		_this.callMethod('callFunction', args, function(successRL){
     			
     			if(!_this.eventbusListenerActive) {
     				
@@ -617,12 +633,19 @@ VitalServiceWebsocketImpl.prototype.streamSubscribe = function(paramsMap, succes
 		return;
 	}
 	
+	var args = [VitalServiceWebsocketImpl.VERTX_STREAM_SUBSCRIBE, {streamNames: [streamName], sessionID: this.sessionID}];
+	
+	if(this.admin) {
+		//insert null app
+		args.splice(0, 0, null);
+	}
+	
 	
 	//first call the server side, on success register
 	
 	var _this = this;
 	
-	this.callMethod('callFunction', [VitalService.VERTX_STREAM_SUBSCRIBE, {streamNames: [streamName], sessionID: _this.sessionID}], function(successRL){
+	this.callMethod('callFunction', args, function(successRL){
 		
 		if(!_this.eventbusListenerActive) {
 			
@@ -676,7 +699,12 @@ VitalServiceWebsocketImpl.prototype.streamUnsubscribe = function(paramsMap, succ
 	
 	var _this = this;
 	
-	this.callMethod('callFunction', [VitalService.VERTX_STREAM_UNSUBSCRIBE, {streamNames: [streamName], sessionID: _this.sessionID}], function(successRL){
+	if(this.admin) {
+		//insert null app
+		args.splice(0, 0, null);
+	}
+	
+	this.callMethod('callFunction', args, function(successRL){
 		
 		delete _this.currentHandlers[streamName];
 
@@ -707,8 +735,8 @@ VitalServiceWebsocketImpl.prototype.createNewHandler = function() {
 	
 	var wrapperHandler = function(json) {
 		
-		if(json.type != 'ResultList' ) {
-			alert("only ResultList messages accepted");
+		if(json._type != 'ai.vital.vitalservice.query.ResultList' ) {
+			alert("only ai.vital.vitalservice.query.ResultList type messages accepted");
 			return
 		}
 		
