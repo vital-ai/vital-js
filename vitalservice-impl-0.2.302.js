@@ -23,7 +23,7 @@ VitalServiceWebsocketImpl = function(address, type, eventBusURL, successCB, erro
 	} else if(type == 'superadmin') {
 		this.superadmin = true;
 	} else {
-		alert("Unhnown type: " + type);
+		console.error("Unhnown type: " + type);
 		return
 	}
 	
@@ -112,8 +112,9 @@ VitalServiceWebsocketImpl = function(address, type, eventBusURL, successCB, erro
 		
 	} else {
 		
-		alert("VitalServiceJson module not available, it's mandatory.");
+		console.error("VitalServiceJson module not available, it's mandatory.");
 //		console.warn("VitalServiceJson module not available, validation disabled.");
+		return;
 	}
 	
 
@@ -174,8 +175,6 @@ VitalServiceWebsocketImpl.prototype.newConn = function() {
     		}
     		
     		
-    		
-    		alert("Protocols: wl: " + s);
     		
     	options.protocols_whitelist = configService.protocols_whitelist;
     }
@@ -360,13 +359,13 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 	console.log("service call " + method + " args:", args)
 	
 	if(typeof(successCB) != "function") {
-		alert("method: " + method + " - Success callback not a function, arguments list invalid");
-		return
+		console.error("method: " + method + " - Success callback not a function, arguments list invalid");
+		return;
 	}
 	
 	if(typeof(errorCB) != "function") {
-		alert("method: " + method + " - Error callback not a function, arguments list invalid");
-		return
+		console.error("method: " + method + " - Error callback not a function, arguments list invalid");
+		return;
 	}
 	
 	var data = {
@@ -393,7 +392,7 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 			}
 			
 		} else {
-			alert("method : " + method + " requires at least two arguments");
+			console.error("method : " + method + " requires at least two arguments");
 			return
 		}
 		
@@ -736,14 +735,14 @@ VitalServiceWebsocketImpl.prototype.createNewHandler = function() {
 	var wrapperHandler = function(json) {
 		
 		if(json._type != 'ai.vital.vitalservice.query.ResultList' ) {
-			alert("only ai.vital.vitalservice.query.ResultList type messages accepted");
+			console.error("only ai.vital.vitalservice.query.ResultList type messages accepted");
 			return
 		}
 		
 		var stream = json.streamName;
 		
 		if(stream == null) {
-			alert('No streamName property in json message');
+			console.error('No streamName property in json message');
 			return;
 		}
 		
@@ -768,7 +767,7 @@ VitalServiceWebsocketImpl.prototype.createNewHandler = function() {
 				
 		} else {
 				
-			alert("No VitalServiceJson module loaded - cannot parse async message.");
+			console.error("No VitalServiceJson module loaded - cannot parse async message.");
 			return;
 				
 		}

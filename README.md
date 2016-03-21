@@ -34,5 +34,5 @@ NOTE: vital-core-0.2.302.js and vital-0.2.302.js schemas are available in $VITAL
   
 	}, function(err){
 	
-		alert('couln\'t connect to vitalservice endpoint -' + err);
+		console.error('couldn\'t connect to vitalservice endpoint -' + err);
 	});

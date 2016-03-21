@@ -66,11 +66,13 @@ VitalServiceJson = function() {
 	
 	
 	if(this.vitalCoreSchema == null) {
-		alert("No vital core schema loaded");
+		console.error("No vital core schema loaded");
+		return;
 	}
 	
 	if(this.vitalDomainSchema == null) {
-		alert("No vital domain schema loaded");
+		console.error("No vital domain schema loaded");
+		return;
 	}
 	
 	
@@ -637,8 +639,6 @@ VitalServiceJson.prototype.reloadOntologies = function(domainsRL, successCB, err
 	for(var i = 0 ; i < domainsRL.results.length; i ++) {
 	
 		var domainGO = domainsRL.results[i].graphObject;
-		
-		alert(domainGO.domainOWL );
 		
 		eval( domainGO.domainOWL );
 		
