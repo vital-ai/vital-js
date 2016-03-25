@@ -270,7 +270,7 @@ VitalServiceAdmin.prototype.get = function(app, URIPropertyOrList, successCB, er
 */
 VitalServiceAdmin.prototype.get = function(app, URIPropertyOrList, doCache, successCB, errorCB) {
 	//always service wide context!
-	this.impl.callMethod('get', [app, {type: 'GraphContext', value: 'ServiceWide'}, URIPropertyOrList, doCache], successCB, errorCB);
+	this.impl.callMethod('get', [app, 'ServiceWide', URIPropertyOrList, doCache], successCB, errorCB);
 }
 
 VitalServiceAdmin.prototype.getApp = function(appID, successCB, errorCB) {
@@ -308,12 +308,12 @@ VitalServiceAdmin.prototype.getTransactions = function(successCB, errorCB) {
 	this.impl.callMethod('getTransactions', [], successCB, errorCB);
 }
 
-VitalServiceAdmin.prototype.insert = function(app, vitalSegment, graphObjectOrList, successCB, errorCB) {
-	this.impl.callMethod('insert', [this.NO_TRANSACTION, app, vitalSegment, graphObject], successCB, errorCB);
-}
+//VitalServiceAdmin.prototype.insert = function(app, vitalSegment, graphObjectOrList, successCB, errorCB) {
+//	this.impl.callMethod('insert', [this.NO_TRANSACTION, app, vitalSegment, graphObjectOrList], successCB, errorCB);
+//}
 
 VitalServiceAdmin.prototype.insert = function(VitalTransaction, app, vitalSegment, graphObjectOrList, successCB, errorCB) {
-	this.impl.callMethod('insert', [VitalTransaction, app, vitalSegment, graphObject], successCB, errorCB);
+	this.impl.callMethod('insert', [VitalTransaction, app, vitalSegment, graphObjectOrList], successCB, errorCB);
 }
 
 VitalServiceAdmin.prototype.listApps = function(successCB, errorCB) {
@@ -387,28 +387,28 @@ VitalServiceAdmin.prototype.rollbackTransaction = function(transaction, successC
 /**
 * Saves a graph object or objects list in default segment 
 */
-VitalServiceAdmin.prototype.save = function(app, graphObjectOrList, createFlag, successCB, errorCB) {
-	this.impl.callMethod('save', [this.NO_TRANSACTION, app, graphObjectOrList, createFlag], successCB, errorCB);
-}
+//VitalServiceAdmin.prototype.save = function(app, graphObjectOrList, createFlag, successCB, errorCB) {
+//	this.impl.callMethod('save', [this.NO_TRANSACTION, app, graphObjectOrList, createFlag], successCB, errorCB);
+//}
 
 /**
  * Saves a graph object or objects list in default segment 
  */
-VitalServiceAdmin.prototype.save = function(VitalTransaction, app, graphObjectOrList, createFlag, successCB, errorCB) {
-	this.impl.callMethod('save', [VitalTransaction, app, graphObjectOrList, createFlag], successCB, errorCB);
+VitalServiceAdmin.prototype.save = function(VitalTransaction, app, graphObjectOrList, successCB, errorCB) {
+	this.impl.callMethod('save', [VitalTransaction, app, graphObjectOrList], successCB, errorCB);
 }
 
 /**
 * Saves a graph object or objects list 
 */
-VitalServiceAdmin.prototype.save = function(app, segment, graphObjectOrList, createFlag, successCB, errorCB) {
-	this.impl.callMethod('save', [this.NO_TRANSACTION, app, segment, graphObjectOrList, createFlag], successCB, errorCB);
-}
+//VitalServiceAdmin.prototype.saveInSegment = function(app, segment, graphObjectOrList, createFlag, successCB, errorCB) {
+//	this.impl.callMethod('save', [this.NO_TRANSACTION, app, segment, graphObjectOrList, createFlag], successCB, errorCB);
+//}
 
 /**
  * Saves a graph object or objects list 
  */
-VitalServiceAdmin.prototype.save = function(VitalTransaction, app, segment, graphObjectOrList, createFlag, successCB, errorCB) {
+VitalServiceAdmin.prototype.saveInSegment = function(VitalTransaction, app, segment, graphObjectOrList, createFlag, successCB, errorCB) {
 	this.impl.callMethod('save', [VitalTransaction, app, segment, graphObjectOrList, createFlag], successCB, errorCB);
 }
 

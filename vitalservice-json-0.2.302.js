@@ -1345,3 +1345,13 @@ vitaljs.getClassProperties = function(classObj, direct) {
 	return r;
 	
 }  
+
+/**
+ * Returns property metadata {"URI": ..., "domainClassesURIs": [ ... ], "shortName": ..., "multipleValues": boolean, "type" : "StringProperty"}
+ * @param propertyURI 
+ * @returns metadata or null
+ */
+vitaljs.getPropetyMetadata = function(propertyURI) {
+	var s = VitalServiceJson.SINGLETON;
+	return s.propertiesMap[propertyURI];
+}
