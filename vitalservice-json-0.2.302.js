@@ -698,6 +698,8 @@ vitaljs.graphObject = function(rawObject) {
 	
 	vitaljs._setImpl(rawObject);
 	
+	return rawObject;
+	
 }
 
 vitaljs._getImpl = function(rawObject) {
