@@ -1321,6 +1321,8 @@ vitaljs.getClassProperties = function(classObj, direct) {
 	}
 	
 	var r = [];
+	var alreadySet = {URI: true, type: true, types: true};
+	
 	
 	for(var key in s.propertiesMap) {
 		
@@ -1337,8 +1339,25 @@ vitaljs.getClassProperties = function(classObj, direct) {
 			if( domainURIs.indexOf(domain) >= 0 ) {
 			
 				r.push({URI: key});
+				alreadySet[key] = true;
 				
 			}
+			
+		}
+		
+	}
+	
+	//cover the case with extended properties
+	var schema = s.loaded[classObj.URI];
+	if(schema != null) {
+		var ps = schema.properties;
+		for(var k in ps) {
+			
+			if ( ! ps.hasOwnProperty(k) )  continue;
+			
+			if(alreadySet[k] == true) continue;
+			
+			r.push({URI: k});
 			
 		}
 		
