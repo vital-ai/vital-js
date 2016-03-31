@@ -13,15 +13,15 @@ Required:
     <script type="text/javascript" src="vitalservice/vertxbus-2.1.js"></script>
     <script type="text/javascript" src="jquery.cookie-1.4.0.js"></script>
     <script type="text/javascript" src="tv4.min.js"></script>
-    <script type="text/javascript" src="vitalservice/vitalservice-0.2.302.js"></script>
-    <script type="text/javascript" src="vitalservice/vitalservice-impl-0.2.302.js"></script>
-    <script type="text/javascript" src="vitalservice-json-0.2.302.js"></script>
-    <script type="text/javascript" src="vital-core-0.2.302.js"></script>
-    <script type="text/javascript" src="vital-0.2.302.js"></script>
+    <script type="text/javascript" src="vitalservice/vitalservice-0.2.303.js"></script>
+    <script type="text/javascript" src="vitalservice/vitalservice-impl-0.2.303.js"></script>
+    <script type="text/javascript" src="vitalservice-json-0.2.303.js"></script>
+    <script type="text/javascript" src="vital-core-0.2.303.js"></script>
+    <script type="text/javascript" src="vital-0.2.303.js"></script>
 
 	 <!-- customer domain schemas here-->
 
-NOTE: vital-core-0.2.302.js and vital-0.2.302.js schemas are available in $VITAL_HOME/vital-json-schema/ directory
+NOTE: vital-core-0.2.303.js and vital-0.2.303.js schemas are available in $VITAL_HOME/vital-json-schema/ directory
       domain schemas are located in $VITAL_HOME/domain-json-schema/
 
 ###Using the service:
