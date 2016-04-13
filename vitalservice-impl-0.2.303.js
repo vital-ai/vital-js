@@ -3,6 +3,16 @@
  */
 var VITAL_SERVICE_UNAVAILABLE_URL = null;
 
+
+/**
+ * Set this callback to be notified when session expires
+ * depending if returned value is true/false the default callback will be called afterwards
+ */
+var VITAL_SESSION_EXPIRED_CALLBACK = null;
+
+//overridden cookie attributes
+var VITAL_COOKIE_ATTRS = {};
+
 /**
  * Websocket based implementation
  * @param address - vitalservice eventbus address, 'vitalservice' in most cases
@@ -322,6 +332,7 @@ VitalServiceWebsocketImpl.prototype.initialSessionCheck = function() {
 		
 		console.warn(errorMsg);
 		
+		$.removeCookie(_this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
 		$.removeCookie(_this.COOKIE_SESSION_ID);
 		_this.appSessionID = null;
 		
@@ -446,7 +457,9 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 							_this.appSessionID = g.get('sessionID');
 							console.log('new auth session: ', g.get('sessionID'));
 							//store it in cookie
-							$.cookie(_this.COOKIE_SESSION_ID, g.get('sessionID'), { expires: 7 });
+							var attrs = {expires: 7};
+							$.extend(attrs, VITAL_COOKIE_ATTRS);
+							$.cookie(_this.COOKIE_SESSION_ID, g.get('sessionID'), attrs);
 						} else if(_this.loginTypes.indexOf(g.type) >= 0) {
 							_this.login = g;
 						}
@@ -458,6 +471,7 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 					
 					_this.appSessionID = null
 					
+					$.removeCookie(_this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
 					$.removeCookie(_this.COOKIE_SESSION_ID);
 					console.log("session cookie removed")
 					
@@ -472,6 +486,7 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 			
 			if(functionName == VitalServiceWebsocketImpl.vitalauth_logout && _this.COOKIE_SESSION_ID != null) {
 				//no matter what, always remove the cookie and notify callback
+				$.removeCookie(_this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
 				$.removeCookie(_this.COOKIE_SESSION_ID);
 				_this.appSessionID = null;
 			}
@@ -487,7 +502,26 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 				
 			}
 			
-			errorCB(result.message)
+			var callErrorCB = true;
+			
+			//this is thrown when session expired / not found
+			if(result.status == 'error_denied') {
+
+				$.removeCookie(_this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
+				$.removeCookie(_this.COOKIE_SESSION_ID);
+				_this.appSessionID = null;
+				
+				if( VITAL_SESSION_EXPIRED_CALLBACK != null) {
+				
+					callErrorCB = VITAL_SESSION_EXPIRED_CALLBACK(result.message);
+				}
+				
+			}
+			
+			if(callErrorCB == true) {
+				errorCB(result.message)
+			}
+			
 			
 		}
 		
