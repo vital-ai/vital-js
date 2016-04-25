@@ -10,6 +10,8 @@ $(function(){
 	
 	println('READY');
 	
+	VITAL_LOGGING = true
+
 	vitalservice = new VitalService('vitalservice.app', null, function(){
 		
 		println('connected to endpoint, sessionID: ' + vitalservice.impl.sessionID);

@@ -111,7 +111,7 @@ VitalServiceJson.VITAL_DOMAIN_URI = 'http://vital.ai/ontology/vital';
 VitalServiceJson.prototype._load = function(sFiles) {
 	
 
-	console.log("schemas count: ", sFiles.length);
+	if(VITAL_LOGGING) { console.log("schemas count: ", sFiles.length); }
 	
 	var newLoaded = {};
 	
@@ -126,8 +126,6 @@ VitalServiceJson.prototype._load = function(sFiles) {
 			var extendsURI = schema['extends'];
 			
 			if(extendsURI != null) {
-				
-//				console.log("Extension to ", extendsURI);
 				
 				var l = this.loaded[extendsURI];
 				
@@ -150,7 +148,7 @@ VitalServiceJson.prototype._load = function(sFiles) {
 				
 				var uri = schema.id;
 				
-//				console.log("Loading schema ", uri);
+				if(VITAL_LOGGING) { console.log("Loading schema ", uri); }
 				
 				tv4.addSchema(uri, schema);
 				
@@ -181,10 +179,6 @@ VitalServiceJson.prototype._load = function(sFiles) {
 		}
 		
 	}
-	
-	console.log("dynamic properties classes: ", this.dynamicPropertiesClasses);
-	console.log("loaded classes: ", this.loaded);
-	
 	
 }
 
@@ -364,9 +358,6 @@ VitalServiceJson.prototype.validateResponse = function(response) {
 	
 	if(response.type != null) {
 		var status = this.validateGraphObject(response);
-		if(status == null) {
-			console.log("Validation passed, checked single graph object response");
-		}
 		return status; 
 	}
 	
@@ -389,7 +380,7 @@ VitalServiceJson.prototype.validateResponse = function(response) {
 			
 		}
 		
-		console.log("Validation passed, checked " + response.length + " objects in array");
+		if(VITAL_LOGGING) { console.log("Validation passed, checked " + response.length + " objects in array"); }
 		
 		return null;
 		
@@ -413,12 +404,13 @@ VitalServiceJson.prototype.validateResponse = function(response) {
 			
 		}
 		
-		console.log("Validation passed, checked " + response.results.length + " objects in ResultList");
+		if(VITAL_LOGGING) { console.log("Validation passed, checked " + response.results.length + " objects in ResultList"); }
 	    
 	    return null;
 
 	} else {
-		console.log("response validation skipped: " + response._type);
+		
+		if(VITAL_LOGGING) { console.log("response validation skipped: " + response._type); }
 		return null;
 	}
 	
@@ -440,7 +432,6 @@ VitalServiceJson.prototype.validateGraphObject = function(graphObject) {
 	
 	
 	var valid = tv4.validate(graphObject, schema);
-	//console.log("Object valid ? " + valid, obj);
 	
 	if(!valid) {
 		console.error("Object invalid", tv4.error);

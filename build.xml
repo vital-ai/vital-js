@@ -26,7 +26,8 @@
 			
 		<fileset id="dist-files" dir="${basedir}" defaultexcludes="true">
 			<include name="test/**"/>
-			<include name="*.js"/> 
+			<include name="vertx2/*.js"/> 
+			<include name="vertx3/*.js"/> 
 			<include name="README.md"/>
 		</fileset>
 		

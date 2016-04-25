@@ -301,7 +301,7 @@ VitalService.prototype.generateURI = function(classObject, successCB, errorCB) {
  */
 VitalService.prototype.get = function(URIPropertyOrList, doCache, successCB, errorCB) {
 	//always service wide context!
-	this.impl.callMethod('get', [{type: 'GraphContext', value: 'ServiceWide'}, URIPropertyOrList, doCache], successCB, errorCB);
+	this.impl.callMethod('get', ['ServiceWide', URIPropertyOrList, doCache], successCB, errorCB);
 }
 
 
