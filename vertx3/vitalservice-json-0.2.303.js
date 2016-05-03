@@ -704,6 +704,10 @@ vitaljs.graphObject = function(rawObject) {
  */
 vitaljs.resultList = function(rl) {
 	
+	if(arguments.length == 0 || rl == null) {
+		rl = {_type: 'ai.vital.vitalservice.query.ResultList', results: []};
+	}
+	
 	if(rl._type != 'ai.vital.vitalservice.query.ResultList') {
 		console.error("Only objects of _type: ai.vital.vitalservice.query.ResultList may be augmented: " + rl._type);
 		return;
@@ -724,6 +728,21 @@ vitaljs.resultList = function(rl) {
 			}
 			return null;
 		};
+	}
+	
+	if( typeof( rl.addResult ) === 'undefined' ) {
+		
+		rl.addResult = function(graphObject, score) {
+			
+			if(graphObject == null) throw("graphObject cannot be null");
+			if(score == null) {
+				score = 1;
+			}
+			
+			rl.results.push({_type: 'ai.vital.vitalservice.query.ResultElement', graphObject: graphObject, score: score});
+			
+		}
+		
 	}
 	
 	//pseudo iterator
@@ -786,6 +805,8 @@ vitaljs.resultList = function(rl) {
 		};
 		
 	}
+	
+	return rl;
 	
 }
 
