@@ -735,10 +735,6 @@ vitaljs.resultList = function(rl) {
 		 */
 		rl.iterator = function(classURI, strict) {
 			
-			console.log('rl.iterator, classURI: ' + classURI + " strict: " + strict);
-			
-			var string
-			
 			var r = [];
 			
 			if(strict == null) strict = false;
@@ -773,8 +769,6 @@ vitaljs.resultList = function(rl) {
 				}
 				
 			}
-			
-			console.log('types filter: ', typesFilter);
 			
 			for(var i = 0 ; i < this.results.length; i++) {
 				var g = this.results[i].graphObject;
