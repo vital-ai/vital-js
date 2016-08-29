@@ -6,7 +6,57 @@
  * @param errorCB
  * @returns
  */
+
+/*
+if(module) {
+	
+	var import1 = require(__dirname + '/vitalservice-json-0.2.304.js');
+	
+	vitaljs = import1.vitaljs;
+	VitalServiceJson = import1.VitalServiceJson;
+	
+	var import2 = require(__dirname + '/vitalservice-impl-0.2.304.js');
+	
+	VitalServiceWebsocketImpl = import2.VitalServiceWebsocketImpl;
+	UUIDGenerator = import2.UUIDGenerator;
+	
+}
+*/
+
 VitalService = function(address, eventbusURL, successCB, errorCB) {
+
+	if(module) {
+		
+		if( typeof(tv4) === 'undefined' ) {
+
+			VITAL_JSON_SCHEMAS = [];
+			
+			VITAL_LOGGING = true;
+			
+			tv4 = require(__dirname + '/tv4.min.js');
+		
+			
+			require(__dirname + '/vital-core-0.2.304.js');
+			
+			require(__dirname + '/vital-0.2.304.js');
+			
+			require(__dirname + '/vital-aimp-0.1.0.js');
+			
+			require(__dirname + '/haley-0.1.0.js');
+			
+			var import1 = require(__dirname + '/vitalservice-json-0.2.304.js');
+			
+			vitaljs = import1.vitaljs;
+			VitalServiceJson = import1.VitalServiceJson;
+			
+			var import2 = require(__dirname + '/vitalservice-impl-0.2.304.js');
+			
+			VitalServiceWebsocketImpl = import2.VitalServiceWebsocketImpl;
+			UUIDGenerator = import2.UUIDGenerator;
+
+		}
+		
+	}
 	
 	//the vitalservice is initialized asynchronously
 	this.impl = new VitalServiceWebsocketImpl(address, 'service', eventbusURL, successCB, errorCB);
@@ -44,6 +94,12 @@ VitalService.prototype.getSessionID = function() {
 	return this.impl.appSessionID;
 }
 
+/**
+ * Returns appSessionID from cookie or null
+ */
+VitalService.prototype.getAppSessionID = function() {
+	return this.impl.getAppSessionID();
+}
 
 
 //bulkExport(VitalSegment, OutputStream)
@@ -554,3 +610,9 @@ VitalService.prototype.unloadSchema = function(schemaURI, successCB, errorCB) {
 	this.impl.unloadSchema(schemaURI, successCB, errorCB);
 }
 
+
+if(module) {
+	
+	module.exports = VitalService;
+	
+}

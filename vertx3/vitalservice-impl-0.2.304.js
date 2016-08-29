@@ -75,7 +75,9 @@ VitalServiceWebsocketImpl = function(address, type, eventBusURL, successCB, erro
 		
 		this.COOKIE_SESSION_ID = 'sessionID.' + this.authAppID;
 		
-		this.appSessionID = $.cookie(this.COOKIE_SESSION_ID);
+		if(typeof($) !== 'undefined') {
+			this.appSessionID = $.cookie(this.COOKIE_SESSION_ID);
+		}
 		
 	} else {
 		
@@ -150,9 +152,11 @@ VitalServiceWebsocketImpl = function(address, type, eventBusURL, successCB, erro
 		throw 'vertx.EventBus module not loaded!' 
 	}
 	
-    $(window).bind('beforeunload', function(){
-    	_this.windowKilled = true;
-    });
+	if(typeof($) !== 'undefined') {
+		$(window).bind('beforeunload', function(){
+			_this.windowKilled = true;
+		});
+	}
 
     this.newConn()
     
@@ -176,6 +180,35 @@ VitalServiceWebsocketImpl.vitalauth_login = 'vitalauth.login';
 VitalServiceWebsocketImpl.vitalauth_logout = 'vitalauth.logout';
 
 VitalServiceWebsocketImpl.vitalauth_authorise = 'vitalauth.authorise';
+
+VitalServiceWebsocketImpl.prototype.getAppSessionID = function() {
+	
+	if(this.COOKIE_SESSION_ID == null) {
+		return null;
+	}
+	
+	//check if cookie exists
+	if(typeof($) !== 'undefined') {
+		this.appSessionID = $.cookie(this.COOKIE_SESSION_ID);
+	}
+	
+	if(this.appSessionID == null) {
+		
+		
+		if(typeof($) !== 'undefined') {
+			$.removeCookie(this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
+			$.removeCookie(this.COOKIE_SESSION_ID);
+		}
+		
+		this.appSessionID = null;
+		this.login = null;
+		
+		
+	}
+	
+	return this.appSessionID;
+	
+}
 
 VitalServiceWebsocketImpl.prototype.newConn = function() {
     	
@@ -343,8 +376,10 @@ VitalServiceWebsocketImpl.prototype.initialSessionCheck = function() {
 		
 		console.warn(errorMsg);
 		
-		$.removeCookie(_this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
-		$.removeCookie(_this.COOKIE_SESSION_ID);
+		if(typeof($) !== 'undefined') {
+			$.removeCookie(_this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
+			$.removeCookie(_this.COOKIE_SESSION_ID);
+		}
 		_this.appSessionID = null;
 		_this.login = null;
 		
@@ -482,8 +517,10 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 							if(VITAL_LOGGING) { console.log('new auth session: ', g.get('sessionID')); }
 							//store it in cookie
 							var attrs = {expires: 7};
-							$.extend(attrs, VITAL_COOKIE_ATTRS);
-							$.cookie(_this.COOKIE_SESSION_ID, g.get('sessionID'), attrs);
+							_this.extend(attrs, VITAL_COOKIE_ATTRS);
+							if(typeof($) !== 'undefined') {
+								$.cookie(_this.COOKIE_SESSION_ID, g.get('sessionID'), attrs);
+							}
 						} else if(_this.loginTypes.indexOf(g.type) >= 0) {
 							_this.login = g;
 						}
@@ -495,8 +532,10 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 					
 					_this.appSessionID = null
 					_this.login = null;
-					$.removeCookie(_this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
-					$.removeCookie(_this.COOKIE_SESSION_ID);
+					if(typeof($) !== 'undefined') {
+						$.removeCookie(_this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
+						$.removeCookie(_this.COOKIE_SESSION_ID);
+					}
 					if(VITAL_LOGGING) { console.log("session cookie removed"); }
 					
 				}
@@ -510,8 +549,10 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 			
 			if(functionName == VitalServiceWebsocketImpl.vitalauth_logout && _this.COOKIE_SESSION_ID != null) {
 				//no matter what, always remove the cookie and notify callback
-				$.removeCookie(_this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
-				$.removeCookie(_this.COOKIE_SESSION_ID);
+				if(typeof($) !== 'undefined') {
+					$.removeCookie(_this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
+					$.removeCookie(_this.COOKIE_SESSION_ID);
+				}
 				_this.login = null;
 				_this.appSessionID = null;
 			}
@@ -532,8 +573,10 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 			//this is thrown when session expired / not found
 			if(result.status == 'error_denied') {
 
-				$.removeCookie(_this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
-				$.removeCookie(_this.COOKIE_SESSION_ID);
+				if(typeof($) !== 'undefined') {
+					$.removeCookie(_this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
+					$.removeCookie(_this.COOKIE_SESSION_ID);
+				}
 				_this.appSessionID = null;
 				_this.login = null;
 				
@@ -1113,6 +1156,14 @@ VitalServiceWebsocketImpl.prototype.processGraphQueryResults = function(results,
 	
 }
 
+//substitute for jquery.extend, source: http://stackoverflow.com/a/11197343
+VitalServiceWebsocketImpl.prototype.extend = function extend(a, b){
+    for(var key in b)
+        if(b.hasOwnProperty(key))
+            a[key] = b[key];
+    return a;
+}
+
 
 UUIDGenerator = {};
 
@@ -1126,3 +1177,15 @@ UUIDGenerator.generate = function() {
 }
 
 
+if(module) {
+
+	//SockJS = require(__dirname + '/sockjs-0.3.4.min.js');
+	
+	EventBus = require(__dirname + '/vertx-eventbus-3.2.1.js');
+	
+	module.exports = {
+		UUIDGenerator: UUIDGenerator,
+		VitalServiceWebsocketImpl: VitalServiceWebsocketImpl
+	};
+	
+}

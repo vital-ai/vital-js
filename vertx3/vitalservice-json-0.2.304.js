@@ -138,7 +138,7 @@ VitalServiceJson.prototype._load = function(sFiles) {
 				
 				var newProps = schema['properties'];
 				
-				$.extend(currentProps, newProps);
+				this.extend(currentProps, newProps);
 				
 				tv4.addSchema(extendsURI, l);
 				
@@ -598,6 +598,14 @@ VitalServiceJson.prototype.unloadSchema = function(schemaURI) {
 	
 	this._load(newList);
 	
+}
+
+//substitute for jquery.extend, source: http://stackoverflow.com/a/11197343
+VitalServiceJson.prototype.extend = function extend(a, b){
+    for(var key in b)
+        if(b.hasOwnProperty(key))
+            a[key] = b[key];
+    return a;
 }
 
 /**
@@ -1491,4 +1499,14 @@ vitaljs.getPropetyMetadata = function(propertyURI) {
 vitaljs.isClassLoaded = function(classURI) {
 	var s = VitalServiceJson.SINGLETON;
 	return s.loaded[classURI] != null;
+}
+
+
+if(module) {
+	
+	module.exports = {
+		vitaljs: vitaljs,
+		VitalServiceJson: VitalServiceJson
+	};
+	
 }
