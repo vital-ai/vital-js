@@ -462,7 +462,11 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 		
 		if(err != null) {
 			
-			console.error("ERROR:" + err);
+			console.error("ERROR:", err);
+			
+			if(typeof(err) === 'object' && err.message != null) {
+				err = err.message;
+			}
 			
 			result = { status: 'error', message: err };
 			
@@ -557,7 +561,7 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 				_this.appSessionID = null;
 			}
 			
-			if(result.message != null) {
+			if(result.message != null && typeof(result.message.indexOf) === 'function') {
 				
 				if( result.message.indexOf('java.net.ConnectException') >= 0 && VITAL_SERVICE_UNAVAILABLE_URL != null ) {
 					
@@ -1177,7 +1181,7 @@ UUIDGenerator.generate = function() {
 }
 
 
-if(module) {
+if(typeof(module) !== 'undefined') {
 
 	//SockJS = require(__dirname + '/sockjs-0.3.4.min.js');
 	

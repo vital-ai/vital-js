@@ -838,6 +838,12 @@ vitaljs._getImpl = function(rawObject) {
 			
 			if( VitalServiceJson.SINGLETON == null ) throw ( "vitaljs singleton not available" );
 			
+			if( vitaljs.isSubclassOf(type, VitalServiceJson.VITAL_CORE_URI + '#VITAL_GraphContainerObject') ) {
+				var v = this[shortName];
+				if( v != null) return v.value;
+				return null;
+			}
+			
 			var schema = VitalServiceJson.SINGLETON.loaded[type];
 			
 			if(schema == null) throw ( "schema not found for type: " + type );
@@ -1502,7 +1508,7 @@ vitaljs.isClassLoaded = function(classURI) {
 }
 
 
-if(module) {
+if(typeof(module) !== 'undefined') {
 	
 	module.exports = {
 		vitaljs: vitaljs,

@@ -25,7 +25,7 @@ if(module) {
 
 VitalService = function(address, eventbusURL, successCB, errorCB) {
 
-	if(module) {
+	if(typeof(module) !== 'undefined') {
 		
 		if( typeof(tv4) === 'undefined' ) {
 
@@ -611,7 +611,7 @@ VitalService.prototype.unloadSchema = function(schemaURI, successCB, errorCB) {
 }
 
 
-if(module) {
+if(typeof(module) !== 'undefined') {
 	
 	module.exports = VitalService;
 	
