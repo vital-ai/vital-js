@@ -26,6 +26,9 @@ VitalServiceJson = function() {
 	}
 	*/
 	
+	//optimize memory usage in large domains
+	this.schemasCache = new LRUCache(10000);
+	
 	this.loaded = {};
 	this.dynamicPropertiesClasses = [];
 	
@@ -140,7 +143,7 @@ VitalServiceJson.prototype._load = function(sFiles) {
 				
 				this.extend(currentProps, newProps);
 				
-				tv4.addSchema(extendsURI, l);
+//				tv4.addSchema(extendsURI, l);
 				
 				this.loaded[extendsURI] = l;
 				
@@ -148,9 +151,56 @@ VitalServiceJson.prototype._load = function(sFiles) {
 				
 				var uri = schema.id;
 				
-				if(VITAL_LOGGING) { console.log("Loading schema ", uri); }
+				if(uri == null) {
+					throw "unknown schema object, no id";
+				}
 				
-				tv4.addSchema(uri, schema);
+				
+				if(schema.type == null) {
+					schema.type = 'object';
+				}
+				
+				if(schema.required == null) {
+					schema.required = [ "URI", "type" ];
+				}
+				
+				if(schema.additionalProperties == null) {
+					schema.additionalProperties = false;
+				}
+				
+				
+				var props = schema.properties;
+				if(props == null) {
+					schema.properties = props;
+					props = {};
+				}
+				
+				if(props.URI == null) {
+					props.URI = {
+						"type": "string"
+					};
+				}
+				
+				if(props.type == null) {
+					props.type = {
+						"enum" : [ uri ]
+					};
+				}
+				
+				if(props.types == null) {
+					props.types = {
+						"type" : "array",
+						"minItems" : 1,
+						"items" : {
+							"type" : "string"
+						},
+						"uniqueItems" : true
+					};
+				}
+				
+//				if(VITAL_LOGGING) { console.log("Loading schema ", uri); }
+				
+//				tv4.addSchema(uri, schema);
 				
 				this.loaded[uri] = schema;
 				
@@ -423,6 +473,46 @@ VitalServiceJson.prototype.validateResponse = function(response) {
 }
 
 
+VitalServiceJson.prototype._getJsonSchema = function(typeURI) {
+	
+	var s = null;
+	
+	s = this.schemasCache.get(typeURI);
+	if(s != null) return s;
+	
+	var schema = this.loaded[typeURI]
+	
+	if(schema == null) throw "No schema found for graph object type: " + typeURI;
+	
+	//aggregate additional properties from upper classes
+	s = this.extend({}, schema);
+	s.properties = {};
+	this.extend(s.properties, schema.properties);
+	
+	var superClassesWithThis = this.listSuperclasses(typeURI, [], false);
+	
+	for( var i = 0 ; i < superClassesWithThis.length; i++) {
+		if( i == 0 ) continue;
+		var parentSchema = this.loaded[superClassesWithThis[i]];
+		
+		//we do not need deep copy here
+		for(var k in parentSchema.properties) {
+			if(parentSchema.properties.hasOwnProperty(k)) {
+				if(k != 'URI' && k != 'type' && k != 'types') {
+					s.properties[k] = parentSchema.properties[k];
+				}
+			}
+		}
+		
+	}
+	
+	this.schemasCache.put(typeURI, s);
+	
+	return s;
+	
+	
+}
+
 VitalServiceJson.prototype.validateGraphObject = function(graphObject) {
 	
 	if(graphObject.type == null) return "Graph object without type!";
@@ -432,12 +522,15 @@ VitalServiceJson.prototype.validateGraphObject = function(graphObject) {
 		return null;
 	}
 	
-	var schema = this.loaded[graphObject.type]
+	var s = null;
 	
-	if(schema == null) return "No schema found for graph object type: " + graphObject.type; 
+	try {
+		s = this._getJsonSchema(graphObject.type);
+	} catch(e) {
+		return e.message;
+	}
 	
-	
-	var valid = tv4.validate(graphObject, schema);
+	var valid = tv4.validate(graphObject, s);
 	
 	if(!valid) {
 		console.error("Object invalid", tv4.error);
@@ -508,7 +601,7 @@ VitalServiceJson.prototype.purgeSchemas = function(schemaArray) {
 	this.dynamicPropertiesClasses = [];
 	
 	tv4.dropSchemas();
-
+	this.schemasCache = new LRUCache(10000);
 	
 	this._load([this.vitalCoreSchema, this.vitalDomainSchema]);
 	
@@ -584,7 +677,7 @@ VitalServiceJson.prototype.unloadSchema = function(schemaURI) {
 	}
 	
 	
-	
+	this.schemasCache = new LRUCache(10000);
 	tv4.dropSchemas();
 	
 	delete this.domainsMap[schemaURI];
@@ -852,23 +945,41 @@ vitaljs._getImpl = function(rawObject) {
 			
 			var lastKey = null
 			
-			for (var key in props) {
-				
-				if (props.hasOwnProperty(key)) {
+			while(props != null) {
+
+				for (var key in props) {
 					
-					if( shortName == vitaljs.getPropertyShortName(key)) {
+					if (props.hasOwnProperty(key)) {
 						
-						if(lastKey == null) {
+						if( shortName == vitaljs.getPropertyShortName(key)) {
 							
-							lastKey = key;
-							
-						} else {
-							
-							throw "property short name ambiguous: " + shortName + ", matching properties: " + lastKey + ", " + key;
+							if(lastKey == null || lastKey == key) {
+								
+								lastKey = key;
+								
+							} else {
+								
+								throw "property short name ambiguous: " + shortName + ", matching properties: " + lastKey + ", " + key;
+								
+							}
 							
 						}
 						
 					}
+					
+				}
+				
+				if( schema.parent != null ) {
+					
+					var parentURI = schema.parent;
+					schema = VitalServiceJson.SINGLETON.loaded[parentURI];
+					if(schema == null) throw ( "schema not found for type: " + type );
+					
+					props = schema.properties;
+					
+				} else {
+					
+					props = null;
 					
 				}
 				
@@ -923,7 +1034,7 @@ vitaljs._setImpl = function(rawObject) {
 					
 					if( shortName == vitaljs.getPropertyShortName(key)) {
 						
-						if(lastKey == null) {
+						if(lastKey == null || lastKey == key) {
 							
 							lastKey = key;
 							
@@ -1409,7 +1520,7 @@ vitaljs.getLoadedClasses = function(optionalDomainURIFilter) {
 		
 		for(var i = 0 ; i < domain.schemas.length; i++) {
 			
-			r.push({URI: domain.schemas[i].id});
+			r.push({URI: domain.schemas[i].uri});
 			
 		}
 		
