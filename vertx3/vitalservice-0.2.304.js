@@ -35,6 +35,10 @@ VitalService = function(address, eventbusURL, successCB, errorCB) {
 			
 			tv4 = require(__dirname + '/tv4.min.js');
 		
+			LRUCache = require(__dirname + '/lru.js').LRUCache;
+			
+			console.log('lrucache', LRUCache);
+			
 			
 			require(__dirname + '/vital-core-0.2.304.js');
 			

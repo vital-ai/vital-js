@@ -15,7 +15,7 @@ VitalServiceJson = function() {
 	if(typeof(VITAL_JSON_SCHEMAS) == 'undefined') {
 		throw ("No VITAL_JSON_SCHEMAS list defined - vital-core domain unavailable")
 	}
-	
+
 	/*
 	if(typeof(vital_core_0_2_252_schema) == 'undefined') {
 		throw ("No vital_core_0_2_252_schema - core json schema not loaded");
@@ -937,7 +937,7 @@ vitaljs._getImpl = function(rawObject) {
 				return null;
 			}
 			
-			var schema = VitalServiceJson.SINGLETON.loaded[type];
+			var schema = VitalServiceJson.SINGLETON._getJsonSchema(type);//loaded[type];
 			
 			if(schema == null) throw ( "schema not found for type: " + type );
 			
@@ -945,44 +945,26 @@ vitaljs._getImpl = function(rawObject) {
 			
 			var lastKey = null
 			
-			while(props != null) {
-
-				for (var key in props) {
+			for (var key in props) {
 					
-					if (props.hasOwnProperty(key)) {
+				if (props.hasOwnProperty(key)) {
 						
-						if( shortName == vitaljs.getPropertyShortName(key)) {
+					if( shortName == vitaljs.getPropertyShortName(key)) {
 							
-							if(lastKey == null || lastKey == key) {
+						if(lastKey == null || lastKey == key) {
 								
-								lastKey = key;
-								
-							} else {
-								
-								throw "property short name ambiguous: " + shortName + ", matching properties: " + lastKey + ", " + key;
-								
-							}
+							lastKey = key;
 							
+						} else {
+								
+							throw "property short name ambiguous: " + shortName + ", matching properties: " + lastKey + ", " + key;
+								
 						}
-						
+							
 					}
-					
+						
 				}
-				
-				if( schema.parent != null ) {
 					
-					var parentURI = schema.parent;
-					schema = VitalServiceJson.SINGLETON.loaded[parentURI];
-					if(schema == null) throw ( "schema not found for type: " + type );
-					
-					props = schema.properties;
-					
-				} else {
-					
-					props = null;
-					
-				}
-				
 			}
 			
 			if(lastKey == null) throw ("no matching property for short name found: " + shortName + " type: " + type);
@@ -1020,7 +1002,7 @@ vitaljs._setImpl = function(rawObject) {
 			
 			if( VitalServiceJson.SINGLETON == null ) throw ( "vitaljs singleton not available" );
 			
-			var schema = VitalServiceJson.SINGLETON.loaded[type];
+			var schema = VitalServiceJson.SINGLETON._getJsonSchema(type);// VitalServiceJson.SINGLETON.loaded[type];
 			
 			if(schema == null) throw ( "schema not found for type: " + type );
 			
