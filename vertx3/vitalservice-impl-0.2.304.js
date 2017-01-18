@@ -17,8 +17,15 @@ var VITAL_SESSION_EXPIRED_CALLBACK = null;
  */
 var VITAL_AUTHENTICATION_REQUIRED_CALLBACK = null;
 
-//overridden cookie attributes
+/**
+ * overridden cookie attributes
+ */ 
 var VITAL_COOKIE_ATTRS = {};
+
+/**
+ * use prefixed cookies if there are multiple apps with different logins hosted in same vital app 
+ */
+var VITAL_COOKIE_PREFIX = '';
 
 //logging disabled by default
 var VITAL_LOGGING = false
@@ -73,7 +80,7 @@ VitalServiceWebsocketImpl = function(address, type, eventBusURL, successCB, erro
 		
 		this.authAppID = this.address.substring('endpoint.'.length);
 		
-		this.COOKIE_SESSION_ID = 'sessionID.' + this.authAppID;
+		this.COOKIE_SESSION_ID = VITAL_COOKIE_PREFIX + 'sessionID.' + this.authAppID;
 		
 		if(typeof($) !== 'undefined') {
 			this.appSessionID = $.cookie(this.COOKIE_SESSION_ID);
