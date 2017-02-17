@@ -58,6 +58,8 @@ VitalServiceJson = function() {
 		
 		sFiles.push(schema);
 		
+		this._fixLongPropertySchema(schema);
+		
 		this.domainsMap[schema.domainURI] = schema;
 		
 		for(var j = 0 ; j < schema.properties.length; j++) {
@@ -85,6 +87,8 @@ VitalServiceJson = function() {
 		
 		var schemaURI = schema.domainURI;
 		
+		this._fixLongPropertySchema(schema);
+		
 		this.domainsMap[schema.domainURI] = schema;
 		
 		for(var i = 0 ; i < schema.properties.length; i++) {
@@ -109,6 +113,55 @@ VitalServiceJson.VITAL_CORE_URI = 'http://vital.ai/ontology/vital-core';
 
 VitalServiceJson.VITAL_DOMAIN_URI = 'http://vital.ai/ontology/vital';
 
+
+
+VitalServiceJson.prototype._fixLongPropertySchema = function(schema) {
+	
+	//collect long properties
+	var longProperties = {};
+	for(var i = 0; i < schema['properties'].length; i++) {
+		var property = schema['properties'][i];
+		if(property.type == 'LongProperty'){
+			longProperties[property.URI] = true;
+		}
+	}
+	
+	var keys = Object.keys(longProperties);
+
+	if(VITAL_LOGGING) { 
+		console.log( schema.domainURI + " Long properties: ", Object.keys(longProperties));
+	}
+	
+	if(keys.length == 0) return;
+	
+	for(var i = 0 ; i < schema.schemas.length; i++) {
+		
+		var classSchema = schema.schemas[i];
+		
+		var properties = classSchema['properties'];
+		
+		var pURIs = Object.keys(properties);
+		
+		for(var j = 0; j < pURIs.length; j++) {
+			
+			var pURI = pURIs[j];
+			
+			
+			if(longProperties[pURI] != null) {
+//				console.warn("Updating long schema: ", properties[pURI])
+//				console.warn("Into: ", {});
+				
+				//get rid of type constraint for long properties
+				properties[pURI] = {};
+			}
+			
+		}
+		
+		
+		
+	}
+	
+}
 
 
 VitalServiceJson.prototype._load = function(sFiles) {
@@ -519,6 +572,7 @@ VitalServiceJson.prototype.validateGraphObject = function(graphObject) {
 
 	if(this.dynamicPropertiesClasses.indexOf(graphObject.type) >= 0) {
 		//dynamic properties objects are allowed
+		vitaljs.graphObject(graphObject);
 		return null;
 	}
 	
@@ -575,6 +629,8 @@ VitalServiceJson.prototype.loadSchemas = function(schemasArray) {
 		}
 		
 		filtered.push(schemaObj);
+		
+		this._fixLongPropertySchema(schema);
 		
 		this.dynamicDomains.push(schemaObj);
 		
