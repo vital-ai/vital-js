@@ -32,6 +32,8 @@ VitalServiceJson = function() {
 	this.loaded = {};
 	this.dynamicPropertiesClasses = [];
 	
+	this.domainURI2LongProperties = {};
+	
 	
 	this.vitalCoreSchema = null;
 	this.vitalDomainSchema = null;
@@ -117,6 +119,8 @@ VitalServiceJson.VITAL_DOMAIN_URI = 'http://vital.ai/ontology/vital';
 
 VitalServiceJson.prototype._fixLongPropertySchema = function(schema) {
 	
+	var schemaURI = schema.domainURI;
+	
 	//collect long properties
 	var longProperties = {};
 	for(var i = 0; i < schema['properties'].length; i++) {
@@ -132,7 +136,7 @@ VitalServiceJson.prototype._fixLongPropertySchema = function(schema) {
 		console.log( schema.domainURI + " Long properties: ", Object.keys(longProperties));
 	}
 	
-	if(keys.length == 0) return;
+	var otherSchemasKeys = null;
 	
 	for(var i = 0 ; i < schema.schemas.length; i++) {
 		
@@ -141,25 +145,53 @@ VitalServiceJson.prototype._fixLongPropertySchema = function(schema) {
 		var properties = classSchema['properties'];
 		
 		var pURIs = Object.keys(properties);
+	
 		
 		for(var j = 0; j < pURIs.length; j++) {
 			
 			var pURI = pURIs[j];
 			
+			var isLongProp = false;
 			
 			if(longProperties[pURI] != null) {
 //				console.warn("Updating long schema: ", properties[pURI])
 //				console.warn("Into: ", {});
 				
 				//get rid of type constraint for long properties
+				isLongProp = true;
+				
+			} else {
+				
+				if(otherSchemasKeys == null) {
+					otherSchemasKeys = Object.keys(this.domainURI2LongProperties);
+				}
+				
+				for(var s = 0 ; s < otherSchemasKeys.length; s++) {
+					
+					var k = otherSchemasKeys[s];
+					
+					var otherLongProps = this.domainURI2LongProperties[k];
+					
+					if(otherLongProps[pURI] != null) {
+						isLongProp = true;
+						break;
+					}
+					
+				}
+				
+			}
+			
+			if(isLongProp) {
+				
 				properties[pURI] = {};
+				
 			}
 			
 		}
 		
-		
-		
 	}
+
+	this.domainURI2LongProperties[schemaURI] = longProperties;
 	
 }
 
@@ -655,7 +687,7 @@ VitalServiceJson.prototype.purgeSchemas = function(schemaArray) {
 	this.propertiesMap = {};
 	this.loaded = {};
 	this.dynamicPropertiesClasses = [];
-	
+	this.domainURI2LongProperties = {};
 	tv4.dropSchemas();
 	this.schemasCache = new LRUCache(10000);
 	
@@ -737,6 +769,8 @@ VitalServiceJson.prototype.unloadSchema = function(schemaURI) {
 	tv4.dropSchemas();
 	
 	delete this.domainsMap[schemaURI];
+	delete this.domainURI2LongProperties[schemaURI];
+	
 	for( var i = 0 ; i < d.properties.length; i++) {
 		var pURI = d.properties[i].URI;
 		delete this.propertiesMap[pURI];
