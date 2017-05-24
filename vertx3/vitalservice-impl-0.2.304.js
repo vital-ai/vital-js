@@ -73,6 +73,10 @@ VitalServiceWebsocketImpl = function(address, type, eventBusURL, successCB, erro
 
 	this.address = address;
 	
+	//notified when reconnection event happens
+	this.firstConnectionAttempt = true;
+	this.reconnectHandler = null;
+	
 	//
 	this.authAppID = null; 
 	
@@ -95,6 +99,7 @@ VitalServiceWebsocketImpl = function(address, type, eventBusURL, successCB, erro
 	
 	this.vsJson = null;
 	
+	this.closed = false;
 	
 	//single use callbacks
 	this.sH = successCB;
@@ -315,12 +320,26 @@ VitalServiceWebsocketImpl.prototype.newConn = function() {
     		}
     	}
     	
-    		
+    	if(_this.firstConnectionAttempt) {
+    		_this.firstConnectionAttempt = false;
+    	} else {
+    		if(_this.reconnectHandler != null) {
+    			if(VITAL_LOGGING) { console.log("Notifying reconnect handler"); }
+    			_this.reconnectHandler();
+    		} else {
+    			if(VITAL_LOGGING) { console.log("No reconnect handler to notify"); }
+    		}
+    	}
     		
     };
     	
     this.eb.onclose = function() {
 
+    	if(_this.closed) {
+//    		console.log("client already closed");
+    		return;
+    	}
+    	
     	console.warn('sockjstransport, transport closed, ');
 
     	if(_this.recTimeout != null) {
@@ -613,6 +632,23 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 		}
 		
 	});
+	
+}
+
+VitalServiceWebsocketImpl.prototype.close = function(successCB, errorCB){
+	
+	this.closed = true;
+	if(this.eb != null) {
+		try {
+			this.eb.close()
+		} catch(e) {
+			console.error(e);
+		}
+		this.eb = null;
+	}
+	
+	successCB();
+	
 	
 }
 
