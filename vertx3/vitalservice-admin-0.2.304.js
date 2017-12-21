@@ -82,6 +82,18 @@ VitalServiceAdmin.prototype.addVitalServiceKey = function(app, vitalServiceKey, 
 //bulkImport(VitalSegment, InputStream)
 
 /**
+ * Sets auth session expired handler. 
+ * Handler returning false prevent further processing.
+ */
+VitalServiceAdmin.prototype.setAuthSessionExpiredHandler = function(handler) {
+	this.impl.authSessionExpiredHandler = handler;
+}
+
+VitalServiceAdmin.prototype.getAuthSessionExpiredHandler = function() {
+	return this.impl.authSessionExpiredHandler;
+}
+
+/**
 * Calls datascript with name and params
 * returns ResultList
 */
@@ -118,7 +130,10 @@ VitalServiceAdmin.prototype.callFunction = function(app,functionName, paramsMap,
 	this.impl.callMethod('callFunction', [app, functionName, paramsMap], successCB, errorCB);
 }
 
-//close()
+
+VitalServiceAdmin.prototype.close = function(successCB, errorCB) {
+	this.impl.close(successCB, errorCB);
+}
 
 
 VitalServiceAdmin.prototype.commitTransaction = function(transaction, successCB, errorCB) {

@@ -293,7 +293,7 @@ VitalServiceWebsocketImpl.prototype.newConn = function() {
     		//re-register it ?
     		_this.callMethod('callFunction', args, function(successRL){
     			
-    			if(!_this.eventbusListenerActive) {
+    			if(true /*!_this.eventbusListenerActive*/) {
     				
     				_this.eventbusHandler = _this.createNewHandler();
     				_this.eb.registerHandler('stream.'+ _this.sessionID, _this.eventbusHandler);
