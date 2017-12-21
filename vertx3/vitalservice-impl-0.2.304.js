@@ -170,7 +170,9 @@ VitalServiceWebsocketImpl = function(address, type, eventBusURL, successCB, erro
 		});
 	}
 
-    this.newConn()
+	this.authSessionExpiredHandler = null;
+	
+    this.newConn();
     
 }
 
@@ -223,7 +225,13 @@ VitalServiceWebsocketImpl.prototype.getAppSessionID = function() {
 }
 
 VitalServiceWebsocketImpl.prototype.newConn = function() {
-    	
+    
+
+	if(this.recTimeout != null) {
+		clearInterval(this.recTimeout);
+		this.recTimeout = null;
+	}
+	
 	var _this = this;
     var options = {};
     
@@ -260,7 +268,8 @@ VitalServiceWebsocketImpl.prototype.newConn = function() {
 
     	if(_this.recTimeout != null) {
     			
-   			clearTimeout(_this.recTimeout);
+//   		clearTimeout(_this.recTimeout);
+   			clearInterval(_this.recTimeout);
    			_this.recTimeout = null;
     			
    		}
@@ -343,7 +352,7 @@ VitalServiceWebsocketImpl.prototype.newConn = function() {
     	console.warn('sockjstransport, transport closed, ');
 
     	if(_this.recTimeout != null) {
-    		clearTimeout(_this.recTimeout);
+    		clearInterval(_this.recTimeout);
     		_this.recTimeout = null;
     	}
     		
@@ -359,7 +368,8 @@ VitalServiceWebsocketImpl.prototype.newConn = function() {
     	
     	_this.eventbusListenerActive = false;
     		
-   		_this.recTimeout = setTimeout(function () {
+//   		_this.recTimeout = setTimeout(function () {
+    	_this.recTimeout = setInterval(function () {
    			_this.newConn();
    		}, 3000);
    		
@@ -483,6 +493,8 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 		
 	}
 	
+	
+	try {
 	
 	this.eb.send(this.address, data, function(err, result) {
 		
@@ -610,7 +622,11 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 				_this.appSessionID = null;
 				_this.login = null;
 				
-				if( VITAL_SESSION_EXPIRED_CALLBACK != null) {
+				if(_this.authSessionExpiredHandler != null) {
+					
+					callErrorCB = _this.authSessionExpiredHandler(result.message);
+					
+				} else if( VITAL_SESSION_EXPIRED_CALLBACK != null) {
 				
 					callErrorCB = VITAL_SESSION_EXPIRED_CALLBACK(result.message);
 				}
@@ -633,6 +649,14 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 		
 	});
 	
+	
+	} catch(e) {
+		
+		console.error(e);
+		
+		errorCB('' + e);
+		
+	}
 }
 
 VitalServiceWebsocketImpl.prototype.close = function(successCB, errorCB){
@@ -1200,6 +1224,15 @@ VitalServiceWebsocketImpl.prototype.processGraphQueryResults = function(results,
 		errorCB("query_error Query succeeded but there was an error when getting graph match results: " + getError);
 		
 	});
+	
+}
+
+VitalServiceWebsocketImpl.prototype.destroySessionCookie = function(){
+	
+	if(this.COOKIE_SESSION_ID != null && typeof($) !== 'undefined') {
+		$.removeCookie(this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
+		$.removeCookie(this.COOKIE_SESSION_ID);
+	}
 	
 }
 

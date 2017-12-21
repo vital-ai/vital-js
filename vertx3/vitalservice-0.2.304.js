@@ -110,6 +110,28 @@ VitalService.prototype.getAppSessionID = function() {
 //bulkImport(VitalSegment, InputStream)
 
 /**
+ * Destroy vitalservice session cookie
+ */
+VitalService.prototype.destroySessionCookie = function() {
+	this.impl.destroySessionCookie();
+}
+
+/**
+ * Sets auth session expired handler. 
+ * Handler returning false prevent further processing.
+ */
+VitalService.prototype.setAuthSessionExpiredHandler = function(handler) {
+	this.impl.authSessionExpiredHandler = handler;
+}
+
+VitalService.prototype.getAuthSessionExpiredHandler = function() {
+	return this.impl.authSessionExpiredHandler;
+}
+
+//bulkExport(VitalSegment, OutputStream)
+//bulkImport(VitalSegment, InputStream)
+
+/**
  * Calls datascript with name and params
  * returns ResultList
  */
@@ -153,7 +175,10 @@ VitalService.prototype.callFunction = function(functionName, paramsMap, successC
 	this.impl.callMethod('callFunction', [functionName, paramsMap], successCB, errorCB);
 }
 
-//close()
+//close() //vital status?
+VitalService.prototype.close = function(successCB, errorCB) {
+	this.impl.close(successCB, errorCB);
+}
 
 VitalService.prototype.commitTransaction = function(transaction, successCB, errorCB) {
 	this.impl.callMethod('commitTransaction', [transaction], successCB, errorCB);
