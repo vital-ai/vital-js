@@ -2,8 +2,11 @@
  * VitalService JSON submodule - validates the messages and transferred objects using json schema
  * TODO - all service objects validation
  */
-VitalServiceJson = function() {
+VitalServiceJson = function(logger, loggingEnabled) {
 
+	this.logger = logger != null ? logger : console;
+	this.loggingEnabled = loggingEnabled == true;
+	
 	if(VitalServiceJson.SINGLETON != null) {
 		throw ("VitalServiceJson SINGLETON already initialized");
 	}
@@ -73,12 +76,12 @@ VitalServiceJson = function() {
 	
 	
 	if(this.vitalCoreSchema == null) {
-		console.error("No vital core schema loaded");
+		this.logger.error("No vital core schema loaded");
 		return;
 	}
 	
 	if(this.vitalDomainSchema == null) {
-		console.error("No vital domain schema loaded");
+		this.logger.error("No vital domain schema loaded");
 		return;
 	}
 	
@@ -132,8 +135,8 @@ VitalServiceJson.prototype._fixLongPropertySchema = function(schema) {
 	
 	var keys = Object.keys(longProperties);
 
-	if(VITAL_LOGGING) { 
-		console.log( schema.domainURI + " Long properties: ", Object.keys(longProperties));
+	if(this.loggingEnabled) { 
+		this.logger.info( schema.domainURI + " Long properties: ", Object.keys(longProperties));
 	}
 	
 	var otherSchemasKeys = null;
@@ -154,8 +157,8 @@ VitalServiceJson.prototype._fixLongPropertySchema = function(schema) {
 			var isLongProp = false;
 			
 			if(longProperties[pURI] != null) {
-//				console.warn("Updating long schema: ", properties[pURI])
-//				console.warn("Into: ", {});
+//				this.logger.warn("Updating long schema: ", properties[pURI])
+//				this.logger.warn("Into: ", {});
 				
 				//get rid of type constraint for long properties
 				isLongProp = true;
@@ -199,7 +202,7 @@ VitalServiceJson.prototype._fixLongPropertySchema = function(schema) {
 VitalServiceJson.prototype._load = function(sFiles) {
 	
 
-	if(VITAL_LOGGING) { console.log("schemas count: ", sFiles.length); }
+	if(this.loggingEnabled) { this.logger.info("schemas count: ", sFiles.length); }
 	
 	var newLoaded = {};
 	
@@ -218,7 +221,7 @@ VitalServiceJson.prototype._load = function(sFiles) {
 				var l = this.loaded[extendsURI];
 				
 				if(l == null) {
-					console.warn("Base schema not found: " + extendsURI);
+					this.logger.warn("Base schema not found: " + extendsURI);
 					continue;
 				}
 			
@@ -282,10 +285,6 @@ VitalServiceJson.prototype._load = function(sFiles) {
 						"uniqueItems" : true
 					};
 				}
-				
-//				if(VITAL_LOGGING) { console.log("Loading schema ", uri); }
-				
-//				tv4.addSchema(uri, schema);
 				
 				this.loaded[uri] = schema;
 				
@@ -515,7 +514,7 @@ VitalServiceJson.prototype.validateResponse = function(response) {
 			
 		}
 		
-		if(VITAL_LOGGING) { console.log("Validation passed, checked " + response.length + " objects in array"); }
+		if(this.loggingEnabled) { this.logger.info("Validation passed, checked " + response.length + " objects in array"); }
 		
 		return null;
 		
@@ -545,13 +544,13 @@ VitalServiceJson.prototype.validateResponse = function(response) {
 			
 		}
 		
-		if(VITAL_LOGGING) { console.log("Validation passed, checked " + response.results.length + " objects in ResultList"); }
+		if(this.loggingEnabled) { this.logger.info("Validation passed, checked " + response.results.length + " objects in ResultList"); }
 	    
 	    return null;
 
 	} else {
 		
-		if(VITAL_LOGGING) { console.log("response validation skipped: " + response._type); }
+		if(this.loggingEnabled) { this.logger.info("response validation skipped: " + response._type); }
 		return null;
 	}
 	
@@ -619,12 +618,12 @@ VitalServiceJson.prototype.validateGraphObject = function(graphObject) {
 	var valid = tv4.validate(graphObject, s);
 	
 	if(!valid) {
-		console.error("Object invalid", tv4.error);
-		console.error("Object invalid code ", tv4.error.code);
-		console.error("Object invalid message ", tv4.error.message);
-		console.error("Object invalid dataPath ", tv4.error.dataPath);
-		console.error("Object invalid schemaKey ", tv4.error.schemaKey);
-		console.error("Object invalid obj Key ", graphObject);
+		this.logger.error("Object invalid", tv4.error);
+		this.logger.error("Object invalid code ", tv4.error.code);
+		this.logger.error("Object invalid message ", tv4.error.message);
+		this.logger.error("Object invalid dataPath ", tv4.error.dataPath);
+		this.logger.error("Object invalid schemaKey ", tv4.error.schemaKey);
+		this.logger.error("Object invalid obj Key ", graphObject);
 		return "Code: " + tv4.error.code + 
 		" Message: " + tv4.error.message +
 		" DataPath: " + tv4.error.dataPath + 
@@ -656,7 +655,7 @@ VitalServiceJson.prototype.loadSchemas = function(schemasArray) {
 		}
 		
 		if(loadedAlready) {
-			console.warn("Schema already loaded: " + schemaObj.domainURI);
+			this.logger.warn("Schema already loaded: " + schemaObj.domainURI);
 			continue;
 		}
 		
@@ -833,7 +832,7 @@ VitalServiceJson.prototype.reloadOntologies = function(domainsRL, successCB, err
 		
 	}
 	
-	console.log("new domains list: ", VITAL_JSON_SCHEMAS);
+	this.logger.info("new domains list: ", VITAL_JSON_SCHEMAS);
 
 	this.reload();
 	
@@ -900,7 +899,7 @@ vitaljs.resultList = function(rl) {
 	}
 	
 	if(rl._type != 'ai.vital.vitalservice.query.ResultList') {
-		console.error("Only objects of _type: ai.vital.vitalservice.query.ResultList may be augmented: " + rl._type);
+		VitalServiceJson.SINGLETON.logger("Only objects of _type: ai.vital.vitalservice.query.ResultList may be augmented: " + rl._type);
 		return;
 	}
 	

@@ -27,7 +27,7 @@ var VITAL_COOKIE_ATTRS = {};
  */
 var VITAL_COOKIE_PREFIX = '';
 
-//logging disabled by default
+//logging disabled by default, no longer in use!
 var VITAL_LOGGING = false
 
 /**
@@ -38,7 +38,11 @@ var VITAL_LOGGING = false
  * @param errorCB
  * @returns
  */
-VitalServiceWebsocketImpl = function(address, type, eventBusURL, successCB, errorCB) {
+VitalServiceWebsocketImpl = function(address, type, eventBusURL, successCB, errorCB, logger, loggingEnabled) {
+	
+	//default logger is console, but can be replaced with watson etc
+	this.logger = logger != null ? logger : console;
+	this.loggingEnabled = loggingEnabled != null ? loggingEnabled : VITAL_LOGGING;
 	
 	this.admin = false;
 	this.superadmin = false;
@@ -50,7 +54,7 @@ VitalServiceWebsocketImpl = function(address, type, eventBusURL, successCB, erro
 	} else if(type == 'superadmin') {
 		this.superadmin = true;
 	} else {
-		console.error("Unhnown type: " + type);
+		this.logger.error("Unhnown type: " + type);
 		return
 	}
 	
@@ -69,7 +73,7 @@ VitalServiceWebsocketImpl = function(address, type, eventBusURL, successCB, erro
 	
 	this.login = null;
 	
-	if(VITAL_LOGGING) { console.log('sessionID: ' + this.sessionID); }
+	if(this.loggingEnabled) { this.logger.info('sessionID: ' + this.sessionID); }
 
 	this.address = address;
 	
@@ -111,7 +115,7 @@ VitalServiceWebsocketImpl = function(address, type, eventBusURL, successCB, erro
 		this.url = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/eventbus';
 	}
 	
-	if(VITAL_LOGGING) { console.log("eventbus url", this.url); }
+	if(this.loggingEnabled) { this.logger.info("eventbus url", this.url); }
 	
 	this.windowKilled = false;
 	
@@ -122,17 +126,17 @@ VitalServiceWebsocketImpl = function(address, type, eventBusURL, successCB, erro
 	
 	if(typeof( VitalServiceJson ) != 'undefined') {
 		
-		if(VITAL_LOGGING) { console.log("loading json validation module..."); }
+		if(this.loggingEnabled) { this.logger.info("loading json validation module..."); }
 		
 		if(VitalServiceJson.SINGLETON != null) {
 			
-			if(VITAL_LOGGING) { console.log("json singleton already set - reusing"); }
+			if(this.loggingEnabled) { this.logger.info("json singleton already set - reusing"); }
 			
 		} else {
 		
-			if(VITAL_LOGGING) { console.log("Initializing new json singleton"); }
+			if(this.loggingEnabled) { this.logger.info("Initializing new json singleton"); }
 			
-			VitalServiceJson.SINGLETON = new VitalServiceJson();
+			VitalServiceJson.SINGLETON = new VitalServiceJson(this.logger, this.loggingEnabled);
 			
 		}
 		
@@ -146,7 +150,7 @@ VitalServiceWebsocketImpl = function(address, type, eventBusURL, successCB, erro
 		
 	} else {
 		
-		console.error("VitalServiceJson module not available, it's mandatory.");
+		this.logger.error("VitalServiceJson module not available, it's mandatory.");
 
 		return;
 	}
@@ -255,11 +259,11 @@ VitalServiceWebsocketImpl.prototype.newConn = function() {
 
     if(this.eb != null) {
     	
-    	if(VITAL_LOGGING) { console.log("closing existing evenbus connection"); }
+    	if(this.loggingEnabled) { this.logger.info("closing existing evenbus connection"); }
     	try {
     		this.eb.close();
     	} catch(e) {
-    		console.error('error when closing existing websocket', e);
+    		this.logger.error('error when closing existing websocket', e);
     	}
     }
     
@@ -283,7 +287,7 @@ VitalServiceWebsocketImpl.prototype.newConn = function() {
     	
     	if(currentKeys.length > 0) {
     		
-    		if(VITAL_LOGGING) { console.log('refreshing session handlers: ', currentKeys); }
+    		if(_this.loggingEnabled) { _this.logger.info('refreshing session handlers: ', currentKeys); }
     		
     		var args = [VitalServiceWebsocketImpl.VERTX_STREAM_SUBSCRIBE, {streamNames: currentKeys, sessionID: _this.sessionID}];
     		if(_this.admin) {
@@ -303,18 +307,18 @@ VitalServiceWebsocketImpl.prototype.newConn = function() {
     			
     			
     		}, function(errorResponse){
-    			console.error(errorResponse);
+    			_this.logger.error(errorResponse);
     		});
     			
     	}
     		
     		
     	if(_this.windowKilled) {
-    		console.error("sockjstransport, opened - but window killed!");
+    		_this.logger.error("sockjstransport, opened - but window killed!");
     		return;
     	}
     		
-    	if(VITAL_LOGGING) { console.log('sockjstransport, transport ready'); }
+    	if(_this.loggingEnabled) { _this.logger.info('sockjstransport, transport ready'); }
     		
     	if(_this.sH != null) {
     		
@@ -333,10 +337,10 @@ VitalServiceWebsocketImpl.prototype.newConn = function() {
     		_this.firstConnectionAttempt = false;
     	} else {
     		if(_this.reconnectHandler != null) {
-    			if(VITAL_LOGGING) { console.log("Notifying reconnect handler"); }
+    			if(_this.loggingEnabled) { _this.logger.info("Notifying reconnect handler"); }
     			_this.reconnectHandler();
     		} else {
-    			if(VITAL_LOGGING) { console.log("No reconnect handler to notify"); }
+    			if(_this.loggingEnabled) { _this.logger.info("No reconnect handler to notify"); }
     		}
     	}
     		
@@ -345,11 +349,11 @@ VitalServiceWebsocketImpl.prototype.newConn = function() {
     this.eb.onclose = function() {
 
     	if(_this.closed) {
-//    		console.log("client already closed");
+//    		_this.logger.info("client already closed");
     		return;
     	}
     	
-    	console.warn('sockjstransport, transport closed, ');
+    	_this.logger.warn('sockjstransport, transport closed, ');
 
     	if(_this.recTimeout != null) {
     		clearInterval(_this.recTimeout);
@@ -362,7 +366,7 @@ VitalServiceWebsocketImpl.prototype.newConn = function() {
     	_this.eH = null;
     		
     	if(_this.windowKilled) {
-    		console.warn("window killed, don't show popup, or try to reconnect");
+    		_this.logger.warn("window killed, don't show popup, or try to reconnect");
     		return
     	}
     	
@@ -410,7 +414,7 @@ VitalServiceWebsocketImpl.prototype.initialSessionCheck = function() {
 		
 	}, function(errorMsg){
 		
-		console.warn(errorMsg);
+		_this.logger.warn(errorMsg);
 		
 		if(typeof($) !== 'undefined') {
 			$.removeCookie(_this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
@@ -434,7 +438,7 @@ VitalServiceWebsocketImpl.prototype.loadDynamicOntologies = function(successCB, 
 	
 	this.callMethod('callFunction', ['commons/scripts/DomainsManagerScript', {action: 'listJsonSchemas'}], function(domainsRL){
 
-		if(VITAL_LOGGING) { console.log("domainsRL: ", domainsRL); }
+		if(_this.loggingEnabled) { _this.logger.info("domainsRL: ", domainsRL); }
 		
 		_this.vsJson.reloadOntologies(domainsRL);
 		
@@ -450,15 +454,15 @@ VitalServiceWebsocketImpl.prototype.loadDynamicOntologies = function(successCB, 
  */
 VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successCB, errorCB) {
 	
-	if(VITAL_LOGGING) { console.log("service call " + method + " args:", args); }
+	if(this.loggingEnabled) { this.logger.debug("service call " + method + " args:", args); }
 	
 	if(typeof(successCB) != "function") {
-		console.error("method: " + method + " - Success callback not a function, arguments list invalid");
+		this.logger.error("method: " + method + " - Success callback not a function, arguments list invalid");
 		return;
 	}
 	
 	if(typeof(errorCB) != "function") {
-		console.error("method: " + method + " - Error callback not a function, arguments list invalid");
+		this.logger.error("method: " + method + " - Error callback not a function, arguments list invalid");
 		return;
 	}
 	
@@ -486,7 +490,7 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 			}
 			
 		} else {
-			console.error("method : " + method + " requires at least two arguments");
+			this.logger.error("method : " + method + " requires at least two arguments");
 			return
 		}
 		
@@ -500,7 +504,7 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 		
 		if(err != null) {
 			
-			console.error("ERROR:", err);
+			_this.logger.error("ERROR:", err);
 			
 			if(typeof(err) === 'object' && err.message != null) {
 				err = err.message;
@@ -519,7 +523,7 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 			result = { status: 'error', message: 'request timed out' };
 		}
 		
-		if(VITAL_LOGGING) { console.log(method + ' result: ', result); }
+		if(_this.loggingEnabled) { _this.logger.debug(method + ' result: ', result); }
 		
 		
 		//check the status, then object
@@ -556,7 +560,7 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 						var g = response.results[i].graphObject;
 						if(g.type == 'http://vital.ai/ontology/vital#UserSession') {
 							_this.appSessionID = g.get('sessionID');
-							if(VITAL_LOGGING) { console.log('new auth session: ', g.get('sessionID')); }
+							if(_this.loggingEnabled) { _this.logger.info('new auth session: ', g.get('sessionID')); }
 							//store it in cookie
 							var attrs = {expires: 7};
 							_this.extend(attrs, VITAL_COOKIE_ATTRS);
@@ -578,7 +582,7 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 						$.removeCookie(_this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
 						$.removeCookie(_this.COOKIE_SESSION_ID);
 					}
-					if(VITAL_LOGGING) { console.log("session cookie removed"); }
+					if(_this.loggingEnabled) { _this.logger.info("session cookie removed"); }
 					
 				}
 				
@@ -652,7 +656,7 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 	
 	} catch(e) {
 		
-		console.error(e);
+		_this.logger.error(e);
 		
 		errorCB('' + e);
 		
@@ -661,12 +665,14 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 
 VitalServiceWebsocketImpl.prototype.close = function(successCB, errorCB){
 	
+	var _this = this;
+	
 	this.closed = true;
 	if(this.eb != null) {
 		try {
 			this.eb.close()
 		} catch(e) {
-			console.error(e);
+			_this.logger.error(e);
 		}
 		this.eb = null;
 	}
@@ -920,21 +926,21 @@ VitalServiceWebsocketImpl.prototype.createNewHandler = function() {
 	var wrapperHandler = function(err, json) {
 		
 		if(err) {
-			console.error("ERROR:", err);
+			_this.logger.error("ERROR:", err);
 			return;
 		}
 		
 		json = json.body;
 		
 		if(json._type != 'ai.vital.vitalservice.query.ResultList' ) {
-			console.error("only ai.vital.vitalservice.query.ResultList type messages accepted");
+			_this.logger.error("only ai.vital.vitalservice.query.ResultList type messages accepted");
 			return
 		}
 		
 		var stream = json.streamName;
 		
 		if(stream == null) {
-			console.error('No streamName property in json message');
+			_this.logger.error('No streamName property in json message');
 			return;
 		}
 		
@@ -942,7 +948,7 @@ VitalServiceWebsocketImpl.prototype.createNewHandler = function() {
 		var handlerFunction = _this.currentHandlers[stream];
 		
 		if(handlerFunction == null) {
-			console.warn("Received a message for nonexisting stream handler: " + stream)
+			_this.logger.warn("Received a message for nonexisting stream handler: " + stream)
 			return;
 		}
 		
@@ -951,7 +957,7 @@ VitalServiceWebsocketImpl.prototype.createNewHandler = function() {
 			var validationError = _this.vsJson.validateResponse(json);
 				
 			if(validationError != null) {
-				console.error("Async message json validation failed: ", validationError);
+				_this.logger.error("Async message json validation failed: ", validationError);
 				return;
 			}
 			
@@ -959,7 +965,7 @@ VitalServiceWebsocketImpl.prototype.createNewHandler = function() {
 				
 		} else {
 				
-			console.error("No VitalServiceJson module loaded - cannot parse async message.");
+			_this.logger.error("No VitalServiceJson module loaded - cannot parse async message.");
 			return;
 				
 		}
@@ -977,9 +983,11 @@ VitalServiceWebsocketImpl.prototype.createNewHandler = function() {
  */
 VitalServiceWebsocketImpl.prototype.getSchemaList = function(successCB, errorCB) {
 
+	var _this = this;
+	
 	this.callMethod('callFunction', [VitalServiceWebsocketImpl.DomainsManagerScript, {action: 'listJsonSchemas'}], function(domainsRL){
 	
-		if(VITAL_LOGGING) { console.log("remote domains list", domainsRL); }
+		if(_this.loggingEnabled) { _this.logger.info("remote domains list", domainsRL); }
 		
 		var r = [];
 		
@@ -1001,9 +1009,11 @@ VitalServiceWebsocketImpl.prototype.getSchemaList = function(successCB, errorCB)
  */
 VitalServiceWebsocketImpl.prototype.getDependenciesOfSchema = function(schemaName, recursive, successCB, errorCB) {
 	
+	var _this = this;
+	
 	this.callMethod('callFunction', [VitalServiceWebsocketImpl.DomainsManagerScript, {action: 'getDependenciesOfSchema', schemaName: schemaName, recursive: recursive}], function(domainsRL){
 		
-		if(VITAL_LOGGING) { console.log("schema dependencies list", domainsRL); }
+		if(_this.loggingEnabled) { _this.logger.info("schema dependencies list", domainsRL); }
 		
 		var r = [];
 		
@@ -1116,11 +1126,14 @@ VitalServiceWebsocketImpl.prototype.getLocalSchemaList = function(successCB, err
  * Unloads schema with given URI, a simple validation is performed to check
  */
 VitalServiceWebsocketImpl.prototype.unloadSchema = function(schemaURI, successCB, errorCB) {
+	
+	var _this = this;
+	
 	try {
 		this.vsJson.unloadSchema(schemaURI);
 		successCB();
 	} catch(e) {
-		console.error(e);
+		_this.logger.error(e);
 		errorCB(e);
 	}
 }

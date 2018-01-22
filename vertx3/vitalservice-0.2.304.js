@@ -4,6 +4,7 @@
  * @param eventBusURL - if null then current window url protocol://host:port/eventbus will be used 
  * @param successCB
  * @param errorCB
+ * @param options: {logger: (default console), loggingEnabled: (default false)}
  * @returns
  */
 
@@ -23,7 +24,7 @@ if(module) {
 }
 */
 
-VitalService = function(address, eventbusURL, successCB, errorCB) {
+VitalService = function(address, eventbusURL, successCB, errorCB, options) {
 
 	if(typeof(module) !== 'undefined') {
 		
@@ -31,23 +32,18 @@ VitalService = function(address, eventbusURL, successCB, errorCB) {
 
 			VITAL_JSON_SCHEMAS = [];
 			
-			VITAL_LOGGING = true;
-			
 			tv4 = require(__dirname + '/tv4.min.js');
 		
 			LRUCache = require(__dirname + '/lru.js').LRUCache;
 			
-			console.log('lrucache', LRUCache);
-			
-			
-			require(__dirname + '/vital-core-0.2.304.js');
-			
-			require(__dirname + '/vital-0.2.304.js');
-			
-			require(__dirname + '/vital-aimp-0.1.0.js');
-			
-			require(__dirname + '/haley-0.1.0.js');
-			
+			require(__dirname + '/vital-core-0.2.304.js')
+			require(__dirname + '/vital-0.2.304.js')
+			require(__dirname + '/vital-nlp-0.2.304.js')
+			require(__dirname + '/vital-social-0.2.304.js')
+			require(__dirname + '/vital-aimp-0.1.0.js')
+			require(__dirname + '/haley-0.1.0.js')
+			require(__dirname + '/haley-shopping-0.1.0.js')
+					
 			var import1 = require(__dirname + '/vitalservice-json-0.2.304.js');
 			
 			vitaljs = import1.vitaljs;
@@ -62,9 +58,24 @@ VitalService = function(address, eventbusURL, successCB, errorCB) {
 		
 	}
 	
-	//the vitalservice is initialized asynchronously
-	this.impl = new VitalServiceWebsocketImpl(address, 'service', eventbusURL, successCB, errorCB);
+	var _logger = console;
 	
+	var _loggingEnabled = false;
+	
+	if(options != null) {
+		if(options.logger != null) {
+			_logger = options.logger;
+		}
+		if(options.loggingEnabled != null) {
+			_loggingEnabled = options.loggingEnabled;
+		}
+	}
+	
+	//default is console
+	this.logger = _logger;
+	
+	//the vitalservice is initialized asynchronously
+	this.impl = new VitalServiceWebsocketImpl(address, 'service', eventbusURL, successCB, errorCB, this.logger, _loggingEnabled);
 	this.NO_TRANSACTION = null;
 	
 }
@@ -81,6 +92,16 @@ VitalService.VERTX_STREAM_SUBSCRIBE = 'vertx-stream-subscribe';
 VitalService.VERTX_STREAM_UNSUBSCRIBE = 'vertx-stream-unsubscribe';
 
 
+
+VitalService.prototype.setLogger = function(logger){
+	if(logger == null) throw new Error("logger cannot be null"); 
+	this.impl.logger = logger;
+	this.logger = logger;
+}
+
+VitalService.prototype.getLogger = function() {
+	return this.logger;
+}
 
 //non - api
 
@@ -199,7 +220,7 @@ VitalService.prototype.delete_ = function() {
 	
 	var l = arguments.length;
 	if(l < 3 || l > 4) {
-		console.error("Expected 3 or 4 arguments - see documentation");
+		this.logger.error("Expected 3 or 4 arguments - see documentation");
 		return;
 	}
 	
@@ -225,7 +246,7 @@ VitalService.prototype.deleteExpanded = function() {
 	
 	var l = arguments.length;
 	if(l < 3 || l > 5) {
-		console.error("Expected 3 to 5 arguments - see documentation");
+		this.logger.error("Expected 3 to 5 arguments - see documentation");
 		return;
 	}
 	
@@ -270,7 +291,7 @@ VitalService.prototype.deleteExpanded = function() {
 VitalService.prototype.deleteExpandedObject = function() {
 	var l = arguments.length;
 	if(l < 3 || l > 4) {
-		console.error("Expected 3 or 4 arguments - see documentation");
+		this.logger.error("Expected 3 or 4 arguments - see documentation");
 		return;
 	}
 	
@@ -295,7 +316,7 @@ VitalService.prototype.deleteExpandedObjects = function() {
 	
 	var l = arguments.length;
 	if(l < 4 || l > 5) {
-		console.error("Expected 4 or 5 arguments - see documentation");
+		this.logger.error("Expected 4 or 5 arguments - see documentation");
 		return;
 	}
 	
@@ -324,7 +345,7 @@ VitalService.prototype.deleteObject = function() {
 	
 	var l = arguments.length;
 	if(l < 3 || l > 4) {
-		console.error("Expected 3 or 4 arguments - see documentation");
+		this.logger.error("Expected 3 or 4 arguments - see documentation");
 		return;
 	}
 	
@@ -348,7 +369,7 @@ VitalService.prototype.deleteObjects = function() {
 	
 	var l = arguments.length;
 	if(l < 3 || l > 4) {
-		console.error("Expected 3 or 4 arguments - see documentation");
+		this.logger.error("Expected 3 or 4 arguments - see documentation");
 		return;
 	}
 	
@@ -446,7 +467,7 @@ VitalService.prototype.insert = function(VitalTransaction, vitalSegment, graphOb
 	
 	var l = arguments.length;
 	if(l < 4 || l > 5) {
-		console.error("Expected 4 or 5 arguments - see documentation");
+		this.logger.error("Expected 4 or 5 arguments - see documentation");
 		return;
 	}
 	
@@ -542,7 +563,7 @@ VitalService.prototype.save = function() {
 	var l = arguments.length; 
 	
 	if( l < 3 || l > 6) {
-		console.error("save method error, expected 3 to 6 arguments - see documentation");
+		this.logger.error("save method error, expected 3 to 6 arguments - see documentation");
 		return;
 	}
 	
