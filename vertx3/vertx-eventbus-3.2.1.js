@@ -13,6 +13,7 @@
  *
  *   You may elect to redistribute this code under either of these licenses.
  */
+//DK: added custom MAX_CONNECTIONS_EXCEEDED failureType handler
 !function (factory) {
   if (typeof require === 'function' && typeof module !== 'undefined') {
     // CommonJS loader
@@ -82,6 +83,8 @@
     this.replyHandlers = {};
     this.defaultHeaders = null;
 
+    this.errorListeners = [];
+    
     // default event handlers
     this.onerror = function (err) {
       try {
@@ -89,6 +92,11 @@
       } catch (e) {
         // dev tools are disabled so we cannot use console on IE
       }
+      
+      for(var i = 0 ; i < self.errorListeners.length; i++) {
+    	  self.errorListeners[i](err);
+      }
+      
     };
 
     var sendPing = function () {
@@ -152,6 +160,21 @@
         }
       }
     }
+  };
+  
+  EventBus.prototype.addErrorListener = function(listener) {
+	  if( this.errorListeners.indexOf(listener) < 0 ) {
+		  this.errorListeners.push(listener);
+		  return true;
+	  }
+	  return false;
+  };
+  
+  EventBus.prototype.removeErrorListener = function(listener) {
+	  var index = this.errorListeners.indexOf(listener);
+	  if(index < 0) return false;
+	  this.errorListeners.splice(index, 1);
+	  return true;
   };
 
   /**

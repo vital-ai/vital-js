@@ -4,7 +4,13 @@
  * @param eventBusURL - if null then current window url protocol://host:port/eventbus will be used 
  * @param successCB
  * @param errorCB
- * @param options: {logger: (default console), loggingEnabled: (default false)}
+ * @param options: 
+ * 		{
+ * 			logger: (default console), 
+ * 			loggingEnabled: (default false),
+ * 			disconnectOnWebsocketLimitExceeded: (default false),
+ * 			websocketLimitExceededHandler: (default null)
+ *		}
  * @returns
  */
 
@@ -62,12 +68,22 @@ VitalService = function(address, eventbusURL, successCB, errorCB, options) {
 	
 	var _loggingEnabled = false;
 	
+	var _disconnectOnWebsocketLimitExceeded = false;
+	
+	var _websocketLimitExceededHandler = null;
+	
 	if(options != null) {
 		if(options.logger != null) {
 			_logger = options.logger;
 		}
 		if(options.loggingEnabled != null) {
 			_loggingEnabled = options.loggingEnabled;
+		}
+		if(options.disconnectOnWebsocketLimitExceeded != null) {
+			_disconnectOnWebsocketLimitExceeded = options.disconnectOnWebsocketLimitExceeded;
+		}
+		if(options.websocketLimitExceededHandler != null) {
+			_websocketLimitExceededHandler = options.websocketLimitExceededHandler;
 		}
 	}
 	
@@ -76,7 +92,16 @@ VitalService = function(address, eventbusURL, successCB, errorCB, options) {
 	
 	//the vitalservice is initialized asynchronously
 	this.impl = new VitalServiceWebsocketImpl(address, 'service', eventbusURL, successCB, errorCB, this.logger, _loggingEnabled);
+	this.impl.disconnectOnWebsocketLimitExceeded = _disconnectOnWebsocketLimitExceeded;
+	this.impl.websocketLimitExceededHandler = _websocketLimitExceededHandler;
 	this.NO_TRANSACTION = null;
+	
+	
+//	 * 			disconnectOnWebsocketLimitExceeded: (default false),
+//	 * 			websocketLimitExceededHandler: (default null)
+	
+	this.impl.newConnection();
+	
 	
 }
 

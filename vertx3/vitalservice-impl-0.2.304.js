@@ -90,7 +90,7 @@ VitalServiceWebsocketImpl = function(address, type, eventBusURL, successCB, erro
 		
 		this.COOKIE_SESSION_ID = VITAL_COOKIE_PREFIX + 'sessionID.' + this.authAppID;
 		
-		if(typeof($) !== 'undefined') {
+		if(typeof($) !== 'undefined' && typeof($.cookie) !== 'undefined') {
 			this.appSessionID = $.cookie(this.COOKIE_SESSION_ID);
 		}
 		
@@ -174,10 +174,14 @@ VitalServiceWebsocketImpl = function(address, type, eventBusURL, successCB, erro
 		});
 	}
 
+	//handler notified when user is logged out
 	this.authSessionExpiredHandler = null;
+
+	//by default the client will keep reconnecting
+	this.disconnectOnWebsocketLimitExceeded = false;
+	//handler notified when no websocket connections are available
+	this.websocketLimitExceededHandler = null;
 	
-    this.newConn();
-    
 }
 
 VitalServiceWebsocketImpl.JS_REGISTER_STREAM_HANDLER = 'js-register-stream-handler';
@@ -206,14 +210,14 @@ VitalServiceWebsocketImpl.prototype.getAppSessionID = function() {
 	}
 	
 	//check if cookie exists
-	if(typeof($) !== 'undefined') {
+	if(typeof($) !== 'undefined' && typeof($.cookie) !== 'undefined') {
 		this.appSessionID = $.cookie(this.COOKIE_SESSION_ID);
 	}
 	
 	if(this.appSessionID == null) {
 		
 		
-		if(typeof($) !== 'undefined') {
+		if(typeof($) !== 'undefined' && typeof($.cookie) !== 'undefined') {
 			$.removeCookie(this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
 			$.removeCookie(this.COOKIE_SESSION_ID);
 		}
@@ -228,7 +232,7 @@ VitalServiceWebsocketImpl.prototype.getAppSessionID = function() {
 	
 }
 
-VitalServiceWebsocketImpl.prototype.newConn = function() {
+VitalServiceWebsocketImpl.prototype.newConnection = function() {
     
 
 	if(this.recTimeout != null) {
@@ -268,6 +272,30 @@ VitalServiceWebsocketImpl.prototype.newConn = function() {
     }
     
     this.eb = new EventBus(this.url, options);
+    if(this.eb.addErrorListener != null) {
+        this.eb.addErrorListener(function(error){
+        	
+        	_this.logger.error("Vertx eventbus error", error);
+        	
+        	if(error.failureType === "MAX_CONNECTIONS_EXCEEDED") {
+        		
+        		_this.logger.error('max active websocket connections limit has been exceeded');
+        		
+        		if(_this.disconnectOnWebsocketLimitExceeded) {
+        			_this.logger.info("not retrying - marking client as closed");
+        			_this.closed = true;
+        		}
+
+        		if(_this.websocketLimitExceededHandler != null) {
+        			_this.websocketLimitExceededHandler();
+        		}
+        	}
+        	
+        });    	
+    } else {
+    	this.logger.warn("eventbus additional listeners not available");
+    }
+
     this.eb.onopen = function() {
 
     	if(_this.recTimeout != null) {
@@ -349,7 +377,9 @@ VitalServiceWebsocketImpl.prototype.newConn = function() {
     this.eb.onclose = function() {
 
     	if(_this.closed) {
-//    		_this.logger.info("client already closed");
+    		if(_this.loggingEnabled) {
+    			_this.logger.info("client already closed");
+    		}
     		return;
     	}
     	
@@ -374,7 +404,7 @@ VitalServiceWebsocketImpl.prototype.newConn = function() {
     		
 //   		_this.recTimeout = setTimeout(function () {
     	_this.recTimeout = setInterval(function () {
-   			_this.newConn();
+   			_this.newConnection();
    		}, 3000);
    		
     };
@@ -416,7 +446,7 @@ VitalServiceWebsocketImpl.prototype.initialSessionCheck = function() {
 		
 		_this.logger.warn(errorMsg);
 		
-		if(typeof($) !== 'undefined') {
+		if(typeof($) !== 'undefined' && typeof($.cookie) !== 'undefined') {
 			$.removeCookie(_this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
 			$.removeCookie(_this.COOKIE_SESSION_ID);
 		}
@@ -474,6 +504,8 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 	
 	var _this = this;
 	
+	var __skipJsonValidation = false; 
+	
 	
 	var functionName = null;
 	
@@ -483,9 +515,12 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 		if(args.length >= 2) {
 			functionName = args[args.length - 2];
 			
+			var params = args[args.length - 1];
+			
+			__skipJsonValidation = params && params.__skipJsonValidation == true;
+			
 			//set the sessionID param
 			if(functionName == VitalServiceWebsocketImpl.vitalauth_logout) {
-				var params = args[args.length - 1];
 				params.sessionID = this.appSessionID;
 			}
 			
@@ -541,8 +576,12 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 					var validationError = _this.vsJson.validateResponse(response);
 					
 					if(validationError != null) {
-						errorCB(validationError);
-						return;
+						if(!__skipJsonValidation) {
+							errorCB(validationError);
+							return;
+						} else {
+							_this.logger.warn("json schema validation error skipped - ", validationError);
+						}
 						
 					}
 					
@@ -564,7 +603,7 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 							//store it in cookie
 							var attrs = {expires: 7};
 							_this.extend(attrs, VITAL_COOKIE_ATTRS);
-							if(typeof($) !== 'undefined') {
+							if(typeof($) !== 'undefined' && typeof($.cookie) !== 'undefined') {
 								$.cookie(_this.COOKIE_SESSION_ID, g.get('sessionID'), attrs);
 							}
 						} else if(_this.loginTypes.indexOf(g.type) >= 0) {
@@ -578,7 +617,7 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 					
 					_this.appSessionID = null
 					_this.login = null;
-					if(typeof($) !== 'undefined') {
+					if(typeof($) !== 'undefined' && typeof($.cookie) !== 'undefined') {
 						$.removeCookie(_this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
 						$.removeCookie(_this.COOKIE_SESSION_ID);
 					}
@@ -595,7 +634,7 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 			
 			if(functionName == VitalServiceWebsocketImpl.vitalauth_logout && _this.COOKIE_SESSION_ID != null) {
 				//no matter what, always remove the cookie and notify callback
-				if(typeof($) !== 'undefined') {
+				if(typeof($) !== 'undefined' && typeof($.cookie) !== 'undefined') {
 					$.removeCookie(_this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
 					$.removeCookie(_this.COOKIE_SESSION_ID);
 				}
@@ -619,7 +658,7 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 			//this is thrown when session expired / not found
 			if(result.status == 'error_denied') {
 
-				if(typeof($) !== 'undefined') {
+				if(typeof($) !== 'undefined' && typeof($.cookie) !== 'undefined') {
 					$.removeCookie(_this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
 					$.removeCookie(_this.COOKIE_SESSION_ID);
 				}
@@ -677,7 +716,9 @@ VitalServiceWebsocketImpl.prototype.close = function(successCB, errorCB){
 		this.eb = null;
 	}
 	
-	successCB();
+	if(successCB != null) {
+		successCB();
+	}
 	
 	
 }
@@ -1242,7 +1283,7 @@ VitalServiceWebsocketImpl.prototype.processGraphQueryResults = function(results,
 
 VitalServiceWebsocketImpl.prototype.destroySessionCookie = function(){
 	
-	if(this.COOKIE_SESSION_ID != null && typeof($) !== 'undefined') {
+	if(this.COOKIE_SESSION_ID != null && typeof($) !== 'undefined' && typeof($.cookie) !== 'undefined') {
 		$.removeCookie(this.COOKIE_SESSION_ID, VITAL_COOKIE_ATTRS);
 		$.removeCookie(this.COOKIE_SESSION_ID);
 	}
