@@ -61,6 +61,7 @@ VitalServiceJson = function(logger, loggingEnabled) {
 			this.dynamicDomains.push(schema);
 		}
 		
+
 		sFiles.push(schema);
 		
 		this._fixLongPropertySchema(schema);
@@ -105,7 +106,67 @@ VitalServiceJson = function(logger, loggingEnabled) {
 		
 	}
 	
+	sFiles = VitalServiceJson.topologicalSort(sFiles);
+	
 	this._load(sFiles);
+	
+}
+
+VitalServiceJson.topologicalSort = function(domains){
+	
+	//initially get the root domain
+	var out = [];
+	var roots = [];
+	
+	var copy = domains.slice();
+	
+	for(var i = domains.length -1; i >= 0; i--) {
+		var domain = domains[i];
+		if(domain.parents == null || domain.parents.length == 0) {
+			domains.splice(i, 1)
+			roots.push(domain);
+		} else {
+			domain.parentsCopy = domain.parents.slice();
+		}
+	}
+	
+	if(roots.length != 1) throw "Expected exactly 1 root domain, found: " + S.length;
+	
+	while(roots.length > 0) {
+		
+		var removed = roots.splice(0, 1)[0];
+		
+		out.push(removed);
+		
+		var uri = removed.domainURI;
+		
+		for(var i = domains.length - 1; i >= 0; i--) {
+			
+			var d = domains[i];
+			
+			if(d.parentsCopy != null) {
+				var indexOfParent = d.parentsCopy.indexOf(uri); 
+				if(indexOfParent >= 0) {
+					d.parentsCopy.splice(indexOfParent, 1);
+					if(d.parentsCopy.length == 0) {
+						delete d.parentsCopy;
+						domains.splice(i, 1);
+						roots.push(d);
+					}
+				}
+			}
+			
+		}
+		
+	}
+	
+	if(copy.length != out.length) {
+		console.error("input domains", copy);
+		console.error("output domains", out);
+		throw "Incomplete domains graph detected!"
+	}
+	
+	return out;
 	
 }
 

@@ -504,7 +504,7 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 	
 	var _this = this;
 	
-	var __skipJsonValidation = false; 
+	var __ignoreJsonValidationErrors = false; 
 	
 	
 	var functionName = null;
@@ -517,7 +517,7 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 			
 			var params = args[args.length - 1];
 			
-			__skipJsonValidation = params && params.__skipJsonValidation == true;
+			__ignoreJsonValidationErrors = params && params.__ignoreJsonValidationErrors == true;
 			
 			//set the sessionID param
 			if(functionName == VitalServiceWebsocketImpl.vitalauth_logout) {
@@ -576,11 +576,11 @@ VitalServiceWebsocketImpl.prototype.callMethod = function(method, args, successC
 					var validationError = _this.vsJson.validateResponse(response);
 					
 					if(validationError != null) {
-						if(!__skipJsonValidation) {
+						if(!__ignoreJsonValidationErrors) {
 							errorCB(validationError);
 							return;
 						} else {
-							_this.logger.warn("json schema validation error skipped - ", validationError);
+							_this.logger.warn("json schema validation error ignored - ", validationError);
 						}
 						
 					}

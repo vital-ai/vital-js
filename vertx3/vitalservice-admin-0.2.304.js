@@ -12,6 +12,8 @@ VitalServiceAdmin = function(address, eventbusURL, successCB, errorCB) {
 	
 	this.NO_TRANSACTION = null;
 	
+	this.impl.newConnection();
+	
 }
 
 
