@@ -96,22 +96,26 @@ VitalService = function(address, eventbusURL, successCB, errorCB, options) {
 		if(options.websocketLimitExceededHandler != null) {
 			_websocketLimitExceededHandler = options.websocketLimitExceededHandler;
 		}
+		if(options.impl != null) {
+			_logger.warn("Overriding default websocket implementation");
+			this.impl = options.impl;
+		}
 	}
 	
 	//default is console
 	this.logger = _logger;
 	
-	//the vitalservice is initialized asynchronously
-	this.impl = new VitalServiceWebsocketImpl(address, 'service', eventbusURL, successCB, errorCB, this.logger, _loggingEnabled);
-	this.impl.disconnectOnWebsocketLimitExceeded = _disconnectOnWebsocketLimitExceeded;
-	this.impl.websocketLimitExceededHandler = _websocketLimitExceededHandler;
 	this.NO_TRANSACTION = null;
 	
-	
-//	 * 			disconnectOnWebsocketLimitExceeded: (default false),
-//	 * 			websocketLimitExceededHandler: (default null)
-	
-	this.impl.newConnection();
+	if(this.impl == null) {
+
+		//the vitalservice is initialized asynchronously
+		this.impl = new VitalServiceWebsocketImpl(address, 'service', eventbusURL, successCB, errorCB, this.logger, _loggingEnabled);
+		this.impl.disconnectOnWebsocketLimitExceeded = _disconnectOnWebsocketLimitExceeded;
+		this.impl.websocketLimitExceededHandler = _websocketLimitExceededHandler;
+		this.impl.newConnection();
+		
+	}
 	
 	
 }
