@@ -15,16 +15,17 @@
  */
 //DK: added custom MAX_CONNECTIONS_EXCEEDED failureType handler
 !function (factory) {
-  if (typeof require === 'function' && typeof module !== 'undefined') {
-    // CommonJS loader
-    var SockJS = require('sockjs-client');
-    if(!SockJS) {
-      throw new Error('vertx-eventbus.js requires sockjs-client, see http://sockjs.org');
-    }
-    factory(SockJS);
-  } else if (typeof define === 'function' && define.amd) {
+  // if (typeof require === 'function' && typeof module !== 'undefined') {
+  //   // CommonJS loader
+  //   var SockJS = require('sockjs-client');
+  //   if(!SockJS) {
+  //     throw new Error('vertx-eventbus.js requires sockjs-client, see http://sockjs.org');
+  //   }
+  //   factory(SockJS);
+  // } else 
+  if (typeof define === 'function' && define.amd) {
     // AMD loader
-    define('vertx-eventbus', ['sockjs'], factory);
+    // define('vertx-eventbus', ['sockjs'], factory);
   } else {
     // plain old include
     if (typeof this.SockJS === 'undefined') {
@@ -101,6 +102,10 @@
 
     var sendPing = function () {
       self.sockJSConn.send(JSON.stringify({type: 'ping'}));
+    };
+    this.sockJSConn.onheartbeat = function () {
+      console.log('*** heartbeat');
+      sendPing();
     };
 
     this.sockJSConn.onopen = function () {
@@ -187,7 +192,9 @@
    */
   EventBus.prototype.send = function (address, message, headers, callback) {
     // are we ready?
-    if (this.state != EventBus.OPEN) {
+    
+    if (this.state !== EventBus.OPEN) {
+      console.warn('Websocket is still connecting');
       throw new Error('INVALID_STATE_ERR');
     }
 

@@ -6,7 +6,7 @@
  * @param logger
  * @returns
  */
-VitalServiceMockImpl = function(type, successCB, errorCB, logger) {
+ VitalServiceMockImpl = function(type, successCB, errorCB, logger) {
 	
 	//default logger is console, but can be replaced with watson etc
 	this.logger = logger != null ? logger : console;

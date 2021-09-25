@@ -1,4 +1,4 @@
-var VITAL_JSON_SCHEMAS = [];
+VITAL_JSON_SCHEMAS = [];
 
 var vital_core_0_2_304_schema = {
   "domainURI" : "http://vital.ai/ontology/vital-core",

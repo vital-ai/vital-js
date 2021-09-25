@@ -32,6 +32,7 @@ if(module) {
 
 VitalService = function(address, eventbusURL, successCB, errorCB, options) {
 
+	/** Browser side will load module throw script tag.
 	if(typeof(module) !== 'undefined') {
 		
 		if( typeof(tv4) === 'undefined' ) {
@@ -68,6 +69,7 @@ VitalService = function(address, eventbusURL, successCB, errorCB, options) {
 		}
 		
 	}
+	*/
 	
 	var _logger = console;
 	
@@ -207,9 +209,13 @@ VitalService.prototype.callFunction = function(functionName, paramsMap, successC
 		
 		this.impl.unregisterStreamHandler(paramsMap, successCB, errorCB);
 		return;
+
+	} else if(functionName == VitalService.JS_UNREGISTER_STREAM_HANDLER_WITHOUT_LOGOUT) {
+		
+		this.impl.unregisterStreamHandlerWithoutLogout(paramsMap, successCB, errorCB);
+		return;
 		
 	} else if(functionName == VitalService.VERTX_STREAM_SUBSCRIBE) {
-		
 		this.impl.streamSubscribe(paramsMap, successCB, errorCB);
 		return;
 		
